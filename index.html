@@ -66,6 +66,18 @@ footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);fo
 #game{width:100%;height:100%}
 .tips{max-width:760px;margin:14px auto 0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
 .tips b{color:var(--ink)}
+.stage{position:relative}
+.stage:fullscreen,.stage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;border-radius:0;aspect-ratio:auto}
+.ctl{max-width:760px;margin:12px auto 0;display:flex;gap:10px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.speed{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.speed .lbl{font:700 12px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sp{min-width:48px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;cursor:pointer;font-variant-numeric:tabular-nums}
+.sp[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.fsb{min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer}
+.ctlmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
+.fsbar{position:absolute;top:calc(8px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));z-index:2147483000;display:none;gap:8px}
+.stage:fullscreen .fsbar,.stage:-webkit-full-screen .fsbar{display:flex}
+.fsbar button{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(10,8,30,.6);color:#fff;font-weight:700;font-size:13px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -109,7 +121,20 @@ footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);fo
       <a class="back" href="./">&larr; All games</a>
       <h1 id="pTitle"></h1>
     </div>
-    <div class="stage"><div id="game"></div></div>
+    <div class="stage">
+      <div id="game"></div>
+      <div class="fsbar">
+        <button type="button" id="fsSpeed" aria-label="Change game speed">1x</button>
+        <button type="button" id="fsExit">Exit</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="speed" id="speed" role="group" aria-label="Game speed">
+        <span class="lbl">Speed</span>
+      </div>
+      <button type="button" class="fsb" id="fsBtn">Fullscreen + Rotate</button>
+    </div>
+    <div class="ctlmsg" id="ctlmsg" role="status" aria-live="polite"></div>
     <div class="tips">
       <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
       <div><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
@@ -219,6 +244,73 @@ function applyFilter(){
   showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(GAMES.length?'No games match. Try another search or filter.':'No games added yet.')));
 }
 
+/* ----- speed, fullscreen + rotate, wake lock ----- */
+var SPEEDS=[1,1.5,2,3,4],speed=1,started=false,wake=null;
+try{var sv=parseFloat(sget('pgm:speed'));if(SPEEDS.indexOf(sv)>=0)speed=sv;}catch(e){}
+function ctlMsg(t){var m=$('#ctlmsg');if(m)m.textContent=t||'';}
+function fmt(x){return (x===1.5?'1.5':String(x))+'x';}
+function paintSpeed(){
+  document.querySelectorAll('.sp').forEach(function(b){b.setAttribute('aria-pressed',String(parseFloat(b.getAttribute('data-s'))===speed));});
+  var f=$('#fsSpeed');if(f)f.textContent=fmt(speed);
+}
+function gm(){var e=window.EJS_emulator;return e&&e.gameManager?e.gameManager:null;}
+function applySpeed(quiet){
+  paintSpeed();
+  var m=gm();
+  if(!m||typeof m.toggleFastForward!=='function'){if(!quiet&&started)ctlMsg('Speed control is not ready yet. Try again in a moment.');return false;}
+  try{
+    m.toggleFastForward(0);
+    if(speed>1){m.setFastForwardRatio(speed);m.toggleFastForward(1);}
+    if(!quiet)ctlMsg(speed>1?('Speed set to '+fmt(speed)+'. It stays on until you change it.'):'Normal speed.');
+    return true;
+  }catch(e){if(!quiet)ctlMsg('This emulator version does not support speed control.');return false;}
+}
+function setSpeed(v){
+  speed=v;sset('pgm:speed',String(v));
+  if(!started){paintSpeed();ctlMsg('Speed '+fmt(v)+' will apply once the game starts.');return;}
+  applySpeed(false);
+}
+function keepAwake(){
+  try{if(navigator.wakeLock&&!wake){navigator.wakeLock.request('screen').then(function(l){wake=l;l.addEventListener('release',function(){wake=null;});}).catch(function(){});}}catch(e){}
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&started)keepAwake();});
+function isFs(){return document.fullscreenElement||document.webkitFullscreenElement;}
+function enterFs(){
+  var el=document.querySelector('.stage');
+  var req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!req){ctlMsg('Fullscreen is not supported in this browser. Rotate your phone manually.');return;}
+  var p;try{p=req.call(el);}catch(e){p=Promise.reject(e);}
+  Promise.resolve(p).then(function(){
+    try{
+      if(screen.orientation&&screen.orientation.lock){
+        screen.orientation.lock('landscape').catch(function(){ctlMsg('Fullscreen is on. Auto rotate is not allowed here, so turn your phone sideways.');});
+      }else ctlMsg('Fullscreen is on. Turn your phone sideways.');
+    }catch(e){ctlMsg('Fullscreen is on. Turn your phone sideways.');}
+  }).catch(function(){ctlMsg('Fullscreen was blocked. Try the Fullscreen option in the game menu.');});
+}
+function exitFs(){
+  try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}
+  try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}
+}
+function onFsChange(){
+  if(!isFs()){try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}}
+  var b=$('#fsBtn');if(b)b.textContent=isFs()?'Exit fullscreen':'Fullscreen + Rotate';
+}
+function setupControls(){
+  var box=$('#speed');
+  SPEEDS.forEach(function(v){
+    var b=document.createElement('button');b.type='button';b.className='sp';b.setAttribute('data-s',String(v));b.textContent=fmt(v);
+    b.addEventListener('click',function(){setSpeed(v);});box.appendChild(b);
+  });
+  paintSpeed();
+  $('#fsBtn').addEventListener('click',function(){if(isFs())exitFs();else enterFs();});
+  $('#fsExit').addEventListener('click',exitFs);
+  $('#fsSpeed').addEventListener('click',function(){setSpeed(SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length]);});
+  document.addEventListener('fullscreenchange',onFsChange);
+  document.addEventListener('webkitfullscreenchange',onFsChange);
+  if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$('#fsBtn').hidden=true;
+}
+
 /* ----- player (EmulatorJS) ----- */
 function openPlayer(){
   var g=GAMES.filter(function(x){return x.id===playId;})[0];
@@ -234,6 +326,8 @@ function openPlayer(){
   window.EJS_color='#6a5fc4';
   window.EJS_startOnLoaded=false;    /* the player taps once to start, which phones require */
   window.EJS_language='en-US';
+  window.EJS_onGameStart=function(){started=true;applySpeed(true);keepAwake();};
+  setupControls();
   var s=document.createElement('script');
   s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
   s.onerror=function(){$('#game').innerHTML='<p style="color:#fff;padding:20px">The emulator could not load. Check your internet and refresh.</p>';};
