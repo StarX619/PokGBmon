@@ -1,0 +1,18 @@
+{
+  "games": [
+    {
+      "id": "mygame1",
+      "title": "My Game 1",
+      "genre": "Adventure",
+      "description": "Ek line me game ke baare me likho.",
+      "file": "mygame1.gba"
+    },
+    {
+      "id": "mygame2",
+      "title": "My Game 2",
+      "genre": "Action",
+      "description": "Doosre game ki description.",
+      "file": "mygame2.gba"
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PokiGbaMon</title>
+<meta name="description" content="Play GBA games free in your browser. No install, no account.">
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#eceaf4; --surface:#fbfaff; --ink:#1c1a33; --muted:#5a5679; --line:#d4d0e6;
+  --accent:#4f46a5; --on-accent:#fff; --chip:#e1ddf0; --heart:#cf2f57;
+  --font-display:"Pixelify Sans","Courier New",monospace;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f0d1c;--surface:#1a1731;--ink:#ece9fb;--muted:#a9a3cb;--line:#2f2a50;--accent:#a99fff;--on-accent:#17133a;--chip:#27224a;--heart:#ff6b8d}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+header{border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:14px;flex-wrap:wrap}
+.logo{font:700 24px/1 var(--font-display);letter-spacing:.01em;text-decoration:none;color:inherit}
+.search{flex:1 1 220px;max-width:340px}
+.search input{width:100%;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 14px;font:500 14px var(--font-body)}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
+.intro{padding-block:26px 6px}
+.intro h1{font-size:clamp(26px,5vw,42px)}
+.intro p{margin:8px 0 0;color:var(--muted);max-width:60ch}
+.tools{display:flex;gap:10px 14px;justify-content:space-between;align-items:end;flex-wrap:wrap;padding-block:18px 12px}
+.count{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px 16px;padding-bottom:30px}
+.card{display:grid;gap:8px;align-content:start;min-width:0}
+.cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:8px;overflow:hidden;background:#000;cursor:pointer}
+.cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.cover .go{position:absolute;inset:0;display:grid;place-items:center;background:rgba(12,9,36,.55);color:#fff;font:700 18px var(--font-display);opacity:0;transition:opacity .15s}
+.cover:hover .go,.cover:focus-visible .go{opacity:1}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.meta h3{font-size:17px}
+.genre{font-size:12px;color:var(--muted)}
+.desc{font-size:13px;color:var(--muted);margin:0}
+.heart{flex:none;width:36px;height:36px;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted)}
+.heart:hover{background:var(--chip)}
+.heart svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.heart[aria-pressed="true"]{color:var(--heart)}
+.heart[aria-pressed="true"] svg{fill:currentColor}
+.msg{padding:30px 0;color:var(--muted)}
+.how{border-top:1px solid var(--line);padding-block:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.how h3{font-size:16px;margin-bottom:4px}
+.how p{margin:0;color:var(--muted);font-size:14px}
+footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);font-size:13px}
+
+/* player page */
+.player{padding-block:16px 30px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.back{min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;color:inherit}
+.top h1{font-size:clamp(22px,4vw,30px)}
+.stage{background:#000;border-radius:12px;overflow:hidden;width:100%;max-width:760px;height:min(78vh,620px);margin:0 auto}
+@media (min-width:760px){.stage{height:auto;aspect-ratio:3/2}}
+#game{width:100%;height:100%}
+.tips{max-width:760px;margin:14px auto 0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.tips b{color:var(--ink)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="./">PokiGbaMon</a>
+    <div class="search" id="searchBox">
+      <label for="q" style="position:absolute;left:-9999px">Search games</label>
+      <input id="q" type="search" placeholder="Search games" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <div id="home">
+    <section class="wrap intro">
+      <h1>Pick a game. Press play.</h1>
+      <p>Free GBA games that run right in your browser, on phone or computer. No install and no account.</p>
+    </section>
+    <section class="wrap" aria-label="Games">
+      <div class="tools">
+        <div class="count" id="count"></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="msg" id="msg" hidden></div>
+    </section>
+    <section class="wrap how">
+      <div><h3>Saving your progress</h3><p>In-game saves stay in this browser. Use the same phone and browser, and do not clear site data.</p></div>
+      <div><h3>Move to another device</h3><p>Open the game menu and use Save File (download) and Load Save File (upload).</p></div>
+      <div><h3>Loading time</h3><p>Games are around 15 MB. The first load can take a moment on mobile data. Wi-Fi is faster.</p></div>
+    </section>
+  </div>
+
+  <!-- PLAYER -->
+  <div id="playerPage" class="wrap player" hidden>
+    <div class="top">
+      <a class="back" href="./">&larr; All games</a>
+      <h1 id="pTitle"></h1>
+    </div>
+    <div class="stage"><div id="game"></div></div>
+    <div class="tips">
+      <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
+      <div><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
+      <div><b>Backup:</b> menu, then Save File, to download your save and keep it safe.</div>
+    </div>
+  </div>
+</main>
+
+<footer><div class="wrap">PokiGbaMon. All games on this site are original creations by the site owner.</div></footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s);};
+var HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.6-9.3-9A5.4 5.4 0 0 1 12 6.6 5.4 5.4 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>';
+var mem={};
+function sget(k){try{var v=localStorage.getItem(k);if(v!==null)return v;}catch(e){}return mem[k]||null;}
+function sset(k,v){mem[k]=v;try{localStorage.setItem(k,v);}catch(e){}}
+
+var params=new URLSearchParams(location.search);
+var playId=params.get('play');
+var GAMES=[],favs=[],filter='all',query='';
+try{favs=JSON.parse(sget('pgm:fav')||'[]');if(!Array.isArray(favs))favs=[];}catch(e){favs=[];}
+
+fetch('games.json',{cache:'no-cache'}).then(function(r){
+  if(!r.ok)throw new Error('games.json not found');return r.json();
+}).then(function(d){
+  GAMES=(d.games||d||[]).filter(function(g){return g&&g.id&&g.file;});
+  GAMES.forEach(function(g){g.title=g.title||g.id;g.genre=g.genre||'Game';g.description=g.description||'';});
+  playId?openPlayer():openHome();
+}).catch(function(){
+  $('#home').hidden=false;$('#searchBox').hidden=true;
+  showMsg('games.json could not be loaded. Check that the file is uploaded next to index.html.');
+});
+
+function showMsg(t){var m=$('#msg');m.textContent=t;m.hidden=!t;}
+
+/* ----- generated cover: pixel art from the title, used when no cover image is given ----- */
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function makeCover(canvas,g){
+  var W=96,H=64;canvas.width=W;canvas.height=H;var c=canvas.getContext('2d');
+  var h=hash(g.id+g.title),hue=h%360;
+  c.fillStyle='hsl('+hue+' 55% 22%)';c.fillRect(0,0,W,H);
+  c.fillStyle='hsl('+((hue+40)%360)+' 55% 32%)';c.fillRect(0,38,W,26);
+  var r=h;function rn(){r=Math.imul(r^(r>>>15),2246822519)>>>0;r=Math.imul(r^(r>>>13),3266489917)>>>0;r^=r>>>16;return r>>>0;}
+  var i,x,y;
+  for(i=0;i<22;i++){x=rn()%W;y=rn()%34;c.fillStyle='rgba(255,255,255,.55)';c.fillRect(x,y,1,1);}
+  c.fillStyle='hsl('+((hue+180)%360)+' 70% 62%)';
+  for(i=0;i<5;i++){x=(i*19+(rn()%8))%(W-14);y=36+(rn()%18);var w=6+rn()%8,hh=4+rn()%7;c.fillRect(x,y,w,hh);}
+  c.fillStyle='hsl('+((hue+60)%360)+' 85% 70%)';
+  var sx=10+rn()%60,sy=6+rn()%12;c.fillRect(sx,sy,8,8);c.fillStyle='rgba(0,0,0,.35)';c.fillRect(sx+2,sy+2,2,2);
+  c.fillStyle='rgba(0,0,0,.5)';c.fillRect(0,H-14,W,14);
+  c.fillStyle='#fff';c.font='9px "Pixelify Sans",monospace';c.textBaseline='middle';
+  var t=g.title.length>16?g.title.slice(0,15)+'.':g.title;c.fillText(t,4,H-7);
+}
+
+/* ----- home ----- */
+function openHome(){
+  $('#home').hidden=false;
+  buildChips();buildGrid();applyFilter();
+  $('#q').addEventListener('input',function(e){query=e.target.value;applyFilter();});
+}
+var cards=[];
+function buildChips(){
+  var gen=[];GAMES.forEach(function(g){if(gen.indexOf(g.genre)<0)gen.push(g.genre);});
+  var list=[['all','All']].concat(gen.map(function(x){return [x,x];})).concat([['fav','Favorites']]);
+  var el=$('#chips');
+  list.forEach(function(f){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=f[1];b.setAttribute('aria-pressed',String(f[0]===filter));
+    b.addEventListener('click',function(){filter=f[0];el.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});applyFilter();});
+    el.appendChild(b);
+  });
+}
+function buildGrid(){
+  var grid=$('#grid');grid.innerHTML='';cards=[];
+  GAMES.forEach(function(g){
+    var el=document.createElement('article');el.className='card';
+    var a=document.createElement('a');a.className='cover';a.href='?play='+encodeURIComponent(g.id);a.setAttribute('aria-label','Play '+g.title);
+    if(g.cover){var im=document.createElement('img');im.src=g.cover;im.alt='';im.loading='lazy';a.appendChild(im);}
+    else{var cv=document.createElement('canvas');makeCover(cv,g);a.appendChild(cv);}
+    var go=document.createElement('span');go.className='go';go.textContent='PLAY';a.appendChild(go);
+    var meta=document.createElement('div');meta.className='meta';
+    var h=document.createElement('h3');h.textContent=g.title;
+    var hb=document.createElement('button');hb.type='button';hb.className='heart';hb.innerHTML=HEART;hb.setAttribute('aria-label','Favorite '+g.title);
+    hb.addEventListener('click',function(){
+      var k=favs.indexOf(g.id);if(k>=0)favs.splice(k,1);else favs.push(g.id);
+      sset('pgm:fav',JSON.stringify(favs));paint();applyFilter();
+    });
+    meta.appendChild(h);meta.appendChild(hb);
+    var gen=document.createElement('div');gen.className='genre';gen.textContent=g.genre;
+    el.appendChild(a);el.appendChild(meta);el.appendChild(gen);
+    if(g.description){var d=document.createElement('p');d.className='desc';d.textContent=g.description;el.appendChild(d);}
+    grid.appendChild(el);cards.push({g:g,el:el,heart:hb});
+  });
+  paint();
+}
+function paint(){cards.forEach(function(c){c.heart.setAttribute('aria-pressed',String(favs.indexOf(c.g.id)>=0));});}
+function applyFilter(){
+  var n=0,q=query.trim().toLowerCase();
+  cards.forEach(function(c){
+    var ok=true;
+    if(filter==='fav')ok=favs.indexOf(c.g.id)>=0;else if(filter!=='all')ok=c.g.genre===filter;
+    if(ok&&q)ok=(c.g.title+' '+c.g.genre+' '+c.g.description).toLowerCase().indexOf(q)>=0;
+    c.el.hidden=!ok;if(ok)n++;
+  });
+  $('#count').textContent=n+(n===1?' game':' games');
+  showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(GAMES.length?'No games match. Try another search or filter.':'No games added yet.')));
+}
+
+/* ----- player (EmulatorJS) ----- */
+function openPlayer(){
+  var g=GAMES.filter(function(x){return x.id===playId;})[0];
+  if(!g){$('#home').hidden=false;$('#searchBox').hidden=true;showMsg('Game not found.');return;}
+  document.title=g.title+' | PokiGbaMon';
+  $('#playerPage').hidden=false;$('#searchBox').hidden=true;
+  $('#pTitle').textContent=g.title;
+  window.EJS_player='#game';
+  window.EJS_core='gba';
+  window.EJS_gameUrl=g.file;
+  window.EJS_gameName=g.id;          /* saves are stored in the browser under this name */
+  window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
+  window.EJS_color='#6a5fc4';
+  window.EJS_startOnLoaded=false;    /* the player taps once to start, which phones require */
+  window.EJS_language='en-US';
+  var s=document.createElement('script');
+  s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
+  s.onerror=function(){$('#game').innerHTML='<p style="color:#fff;padding:20px">The emulator could not load. Check your internet and refresh.</p>';};
+  document.body.appendChild(s);
+}
+})();
+</script>
+</body>
+</html>
