@@ -1,11 +1,11 @@
 {
   "games": [
     {
-      "id": "mygame1",
-      "title": "My Game 1",
-      "genre": "Adventure",
-      "description": "Ek line me game ke baare me likho.",
-      "file": "mygame1.gba"
+  "id": "pokfd",
+  "title": "Game ka naam jo players ko dikhana hai",
+  "genre": "Adventure",
+  "description": "Ek line ka description",
+  "file": "pokfd.zip"
     },
     {
       "id": "mygame2",
