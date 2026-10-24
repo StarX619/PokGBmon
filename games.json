@@ -6,8 +6,8 @@
   },
   "games": [
     {
-      "title": "FIRE RED",
       "id": "pokfd",
+      "title": "FIRE RED",
       "genre": "Adventure",
       "description": "Ek line ka description",
       "file": "pokfd.zip",
@@ -15,17 +15,6 @@
       "badge": "Hot",
       "howto": "",
       "hidden": false
-    },
-    {
-      "id": "mygame2",
-      "title": "My Game 2",
-      "genre": "Action",
-      "description": "Doosre game ki description.",
-      "file": "mygame2.gba",
-      "cover": "",
-      "badge": "",
-      "howto": "",
-      "hidden": true
     }
   ]
 }
