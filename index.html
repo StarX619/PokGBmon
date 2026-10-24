@@ -161,6 +161,44 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .slotbtn small{font-size:12px;color:var(--muted)}
 .slotbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--chip);box-shadow:inset 0 0 0 1px var(--accent)}
 .cloudmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
+/* tap to play gate */
+.gate{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:16px;overflow:hidden;background:#0b0920;color:#fff}
+.gatebg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(18px) brightness(.45);transform:scale(1.1)}
+.gatebox{position:relative;display:grid;gap:12px;justify-items:center;text-align:center;width:min(100%,360px)}
+.gatecover{width:min(68%,240px);aspect-ratio:3/2;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.5);background:#000}
+.gatecover img,.gatecover canvas{width:100%;height:100%;object-fit:cover;display:block}
+.gatetitle{font:700 24px/1.15 var(--font-display);overflow-wrap:anywhere}
+.gatemeta{font-size:14px;color:#d6d1ff}
+.btn.big{min-height:56px;font-size:18px;padding:0 28px;width:100%}
+.prog{width:100%;display:grid;gap:6px}
+.pbar{height:10px;border-radius:6px;background:rgba(255,255,255,.22);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:#b6adff;transition:width .2s}
+.pbar.ind i{width:40%;animation:ind 1.1s infinite ease-in-out}
+@keyframes ind{0%{margin-left:-40%}100%{margin-left:100%}}
+.prog span{font-size:13px;color:#d6d1ff;font-variant-numeric:tabular-nums}
+.gatemsg{margin:0;font-size:14px;color:#ffb3c1;min-height:18px}
+@media (prefers-reduced-motion:reduce){.pbar.ind i{animation:none;width:100%;opacity:.5}}
+.saved{position:absolute;right:6px;bottom:6px;padding:2px 8px;border-radius:999px;background:rgba(10,8,30,.78);color:#fff;font:700 11px var(--font-body)}
+#offNote button{margin-left:6px}
+
+/* continue playing */
+.sech{font-size:20px;margin:18px 0 10px}
+.controw{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:6px;margin-inline:calc(-1*max(16px,env(safe-area-inset-left)));padding-inline:max(16px,env(safe-area-inset-left));scrollbar-width:none}
+.controw::-webkit-scrollbar{display:none}
+.citem{flex:none;width:150px;display:grid;gap:4px;align-content:start;scroll-snap-align:start}
+.citem b{font:700 15px/1.2 var(--font-display);overflow-wrap:anywhere}
+.citem small{color:var(--muted);font-size:12px}
+
+/* info pages + footer links */
+.doc{max-width:720px;padding-block:18px 30px}
+.doc h1{font-size:clamp(26px,6vw,36px)}
+.doc h2{font-size:20px;margin:24px 0 6px}
+.doc p,.doc li{max-width:68ch;margin:0 0 10px}
+.doc ul{padding-left:20px;margin:0 0 10px}
+.doc .upd{color:var(--muted);font-size:13px;margin:6px 0 8px}
+.linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;min-height:40px}
+.flinks{display:flex;gap:2px 18px;flex-wrap:wrap}
+.flinks a,.flinks .linkbtn{color:var(--muted);min-height:40px;display:inline-flex;align-items:center;font-size:14px}
 .rules{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
 </style>
 </head>
@@ -176,6 +214,32 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
     <button type="button" class="btn sm" id="authBtn" hidden>Log in</button>
   </div>
 </header>
+
+<div class="modal" id="rpModal" role="dialog" aria-modal="true" aria-labelledby="rpT" hidden>
+  <div class="mbox">
+    <button type="button" class="mx" id="rpClose" aria-label="Close">&times;</button>
+    <h2 id="rpT">Report a problem</h2>
+    <form id="rpForm">
+      <div class="field"><label for="rpType">What happened?</label>
+        <select id="rpType">
+          <option>Game does not load</option>
+          <option>Game freezes or crashes</option>
+          <option>Save or login problem</option>
+          <option>Touch controls problem</option>
+          <option>Other</option>
+        </select></div>
+      <div class="field"><label for="rpGame">Game</label><select id="rpGame"></select></div>
+      <div class="field"><label for="rpMsg">Tell us more</label><textarea id="rpMsg" maxlength="500" placeholder="What did you do, and what went wrong?"></textarea></div>
+      <div class="field"><label for="rpContact">Your contact (optional)</label><input id="rpContact" maxlength="100" autocapitalize="none" autocomplete="off"><small>Only fill this if you want a reply.</small></div>
+      <button class="btn primary" type="submit" id="rpGo" style="width:100%">Send report</button>
+      <p class="err" id="rpErr" role="alert"></p>
+    </form>
+    <div id="rpDone" hidden>
+      <p>Thank you. Your report was sent.</p>
+      <button type="button" class="btn" id="rpOk">Close</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="cfModal" role="alertdialog" aria-modal="true" aria-labelledby="cfT" aria-describedby="cfMsg" hidden style="z-index:3100">
   <div class="mbox">
@@ -214,6 +278,10 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <h1 id="tagline">Pick a game. Press play.</h1>
       <p>Free GBA games that run right in your browser, on phone or computer. No install and no account.</p>
     </section>
+    <section class="wrap" id="contSec" aria-label="Continue playing" hidden>
+      <h2 class="sech">Continue playing</h2>
+      <div class="controw" id="contRow"></div>
+    </section>
     <section class="wrap" aria-label="Games">
       <div class="tools">
         <div class="count" id="count">Loading games...</div>
@@ -229,6 +297,14 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
     </section>
   </div>
 
+  <!-- INFO PAGES -->
+  <div id="pageView" class="wrap doc" hidden>
+    <a class="btn" href="./">&larr; All games</a>
+    <h1 id="docT" style="margin-top:16px"></h1>
+    <p class="upd" id="docU"></p>
+    <div id="docB"></div>
+  </div>
+
   <!-- PLAYER -->
   <div id="playerPage" class="wrap player" hidden>
     <div class="top">
@@ -237,6 +313,20 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
     </div>
     <div class="stage">
       <div id="game"></div>
+      <div class="gate" id="gate">
+        <div class="gatebg" id="gateBg"></div>
+        <div class="gatebox">
+          <div class="gatecover" id="gateCover"></div>
+          <div class="gatetitle" id="gateTitle"></div>
+          <div class="gatemeta" id="gateMeta">Checking...</div>
+          <button type="button" class="btn primary big" id="gateBtn">Tap to play</button>
+          <div class="prog" id="prog" hidden>
+            <div class="pbar" id="pbar"><i id="pfill"></i></div>
+            <span id="ptxt"></span>
+          </div>
+          <p class="gatemsg" id="gateMsg" role="alert"></p>
+        </div>
+      </div>
       <div class="fsbar">
         <button type="button" id="fsSpeed" aria-label="Change game speed">1x</button>
         <button type="button" id="fsExit">Exit</button>
@@ -259,6 +349,7 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
     <div class="cloudmsg" id="cloudMsg" role="status" aria-live="polite"></div>
     <div class="tips">
       <div id="howto" hidden></div>
+      <div id="offNote" hidden></div>
       <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
       <div id="tipSave"><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
       <div><b>Backup:</b> menu, then Export Save File, to download your save and keep it safe.</div>
@@ -306,6 +397,7 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
             <button type="button" class="btn sm" id="upBtn" style="justify-self:start">Upload to site</button>
             <small id="upMsg">Needs the GitHub token. You can also upload on github.com.</small>
           </div>
+          <div class="field"><label for="eVer">File version</label><input id="eVer" type="number" min="1" inputmode="numeric"><small>Add 1 whenever you replace the game file, so players get the new file instead of their saved copy.</small></div>
           <div class="field"><label for="eCover">Cover image link</label><input id="eCover" type="url" inputmode="url" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="https://i.ibb.co/..."><small id="cvMsg">On ImgBB use the Direct link (starts with https://i.ibb.co/).</small>
             <div class="prev" id="cvPrev"></div></div>
           <div class="field"><label for="eBadge">Badge</label><select id="eBadge"><option value="">None</option><option>New</option><option>Hot</option><option>Updated</option></select></div>
@@ -326,6 +418,7 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
           <div class="field"><label for="sTitle">Site name</label><input id="sTitle" maxlength="30"></div>
           <div class="field"><label for="sTag">Home page headline</label><input id="sTag" maxlength="60"></div>
           <div class="field"><label for="sNotice">Top banner message</label><input id="sNotice" maxlength="120" placeholder="Leave empty for no banner"></div>
+          <div class="field"><label for="sContact">Contact email (optional)</label><input id="sContact" type="email" maxlength="80" autocapitalize="none" placeholder="Shown on the About page"><small>Leave empty if you do not want to show an email.</small></div>
         </div>
       </div>
 
@@ -361,7 +454,7 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
         </div>
         <div class="sec">
           <h2>Database rules</h2>
-          <p class="hint">In Firebase open Firestore Database, Rules. Replace everything with this text and press Publish. It lets each player reach only their own saves.</p>
+          <p class="hint">In Firebase open Firestore Database, Rules. Replace everything with this text and press Publish. It lets each player reach only their own saves, and lets anyone send a problem report. Reports can only be read by you, in the Firebase console under Firestore Database, Data, reports.</p>
           <textarea class="rules" id="fbRules" rows="14" readonly></textarea>
           <button type="button" class="btn sm" id="fbCopy">Copy rules</button>
         </div>
@@ -375,7 +468,18 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
   </div>
 </main>
 
-<footer><div class="wrap foot"><span id="fnote">All games on this site are original creations by the site owner.</span><a href="?creator" id="creatorLink">Creator login</a></div></footer>
+<footer>
+  <div class="wrap foot">
+    <nav class="flinks" aria-label="Site information">
+      <a href="?page=about">About</a>
+      <a href="?page=privacy">Privacy</a>
+      <a href="?page=terms">Terms</a>
+      <button type="button" class="linkbtn" id="reportLink">Report a problem</button>
+      <a href="?creator" id="creatorLink">Creator login</a>
+    </nav>
+    <span id="fnote">All games on this site are original creations by the site owner.</span>
+  </div>
+</footer>
 
 <script>
 (function(){
@@ -392,7 +496,7 @@ function safeUrl(u){u=String(u||'').trim();if(/^https?:\/\//i.test(u))return u;i
 function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);}
 
 var params=new URLSearchParams(location.search);
-var playId=params.get('play'),wantCreator=params.has('creator');
+var playId=params.get('play'),wantCreator=params.has('creator'),pageName=params.get('page');
 var DEFAULT_SITE={title:'PokiGbaMon',tagline:'Pick a game. Press play.',notice:''};
 var DATA={site:Object.assign({},DEFAULT_SITE),games:[]};
 var favs=[],filter='all',query='';
@@ -401,10 +505,10 @@ try{favs=JSON.parse(sget('pgm:fav')||'[]');if(!Array.isArray(favs))favs=[];}catc
 function normalize(d){
   d=d||{};var list=Array.isArray(d)?d:(d.games||[]);
   var site=Object.assign({},DEFAULT_SITE,(!Array.isArray(d)&&d.site)||{});
-  var so={title:String(site.title||''),tagline:String(site.tagline||''),notice:String(site.notice||'')};
+  var so={title:String(site.title||''),tagline:String(site.tagline||''),notice:String(site.notice||''),contact:String(site.contact||'')};
   if(site.firebase&&typeof site.firebase==='object')so.firebase=site.firebase;
   return {site:so,
-    games:list.filter(function(g){return g&&g.id&&g.file;}).map(function(g){return {id:String(g.id),title:String(g.title||g.id),genre:String(g.genre||'Game'),description:String(g.description||''),file:String(g.file),cover:String(g.cover||''),badge:String(g.badge||''),howto:String(g.howto||''),hidden:!!g.hidden};})};
+    games:list.filter(function(g){return g&&g.id&&g.file;}).map(function(g){return {id:String(g.id),title:String(g.title||g.id),genre:String(g.genre||'Game'),description:String(g.description||''),file:String(g.file),cover:String(g.cover||''),badge:String(g.badge||''),howto:String(g.howto||''),hidden:!!g.hidden,ver:Math.max(1,parseInt(g.ver,10)||1)};})};
 }
 function applySite(){
   var s=DATA.site;
@@ -415,11 +519,12 @@ function applySite(){
 
 /* ============ boot ============ */
 function boot(){
+  try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}
   if(wantCreator){openCreator();return;}
   fetch('games.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
     DATA=normalize(d);applySite();
-    initCloud();setupAuth();
-    playId?openPlayer():openHome();
+    initCloud();setupAuth();setupReport();
+    pageName?openPage(pageName):(playId?openPlayer():openHome());
   }).catch(function(){
     $('#home').hidden=false;$('#searchBox').hidden=true;$('#count').textContent='';
     showMsg('games.json could not be loaded. Check that the file is uploaded next to index.html.');
@@ -459,7 +564,7 @@ var cards=[];
 function visible(){return DATA.games.filter(function(g){return !g.hidden;});}
 function openHome(){
   $('#home').hidden=false;
-  buildChips();buildGrid();applyFilter();
+  buildChips();buildGrid();applyFilter();markCached();
   $('#q').addEventListener('input',function(e){query=e.target.value;applyFilter();});
 }
 function buildChips(){
@@ -481,8 +586,8 @@ function buildGrid(){
     a.appendChild(h('span',{'class':'go',text:'PLAY'}));
     var hb=h('button',{type:'button','class':'heart','aria-label':'Favorite '+g.title});hb.innerHTML=HEART;
     hb.addEventListener('click',function(){
-      var k=favs.indexOf(g.id);if(k>=0)favs.splice(k,1);else favs.push(g.id);
-      sset('pgm:fav',JSON.stringify(favs));paint();applyFilter();
+      var nf=favs.slice(),k=nf.indexOf(g.id);if(k>=0)nf.splice(k,1);else nf.push(g.id);
+      setFavs(nf);paint();applyFilter();
     });
     var el=h('article',{'class':'card'},[a,h('div',{'class':'meta'},[h('h3',{text:g.title}),hb]),h('div',{'class':'genre',text:g.genre}),g.description?h('p',{'class':'desc',text:g.description}):null]);
     grid.appendChild(el);cards.push({g:g,el:el,heart:hb});
@@ -499,6 +604,7 @@ function applyFilter(){
     c.el.hidden=!ok;if(ok)n++;
   });
   $('#count').textContent=n+(n===1?' game':' games');
+  renderContinue();
   showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(cards.length?'No games match. Try another search or filter.':'No games added yet.')));
 }
 
@@ -557,25 +663,38 @@ function openPlayer(){
   $('#playerPage').hidden=false;$('#searchBox').hidden=true;
   $('#pTitle').textContent=g.title;
   if(g.howto){var hw=$('#howto');hw.hidden=false;hw.textContent='';hw.appendChild(h('b',{text:'This game: '}));hw.appendChild(document.createTextNode(g.howto));}
+  setupControls();setupCloudUi();setupGate(g);
+}
+function startEmulator(){
+  var g=curGame;
   window.EJS_player='#game';
   window.EJS_core='gba';
   window.EJS_gameUrl=g.file;
   window.EJS_gameName=g.id;
   window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
   window.EJS_color='#6a5fc4';
-  window.EJS_startOnLoaded=false;
+  window.EJS_startOnLoaded=true;     /* the player already tapped Play on our start screen */
   window.EJS_language='en-US';
-  window.EJS_onGameStart=function(){started=true;applySpeed(true);keepAwake();cloudStart();};
+  window.EJS_onGameStart=function(){started=true;$('#gate').hidden=true;showOffNote();applySpeed(true);keepAwake();cloudStart();};
   if(cloudConfigured()){
     /* with online saves the browser-only save slots are hidden, saves go online */
     window.EJS_Buttons={saveState:false,loadState:false,quickSave:false,quickLoad:false};
     window.EJS_fixedSaveInterval=15000;
     window.EJS_onSaveUpdate=function(e){if(syncOn&&e&&e.save)uploadSav(new Uint8Array(e.save));};
   }
-  setupControls();setupCloudUi();
+  setProg(null,0,'Starting the game...');
+  loadLoader(true);
+}
+function loadLoader(withCors){
   var s=document.createElement('script');
   s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
-  s.onerror=function(){$('#game').innerHTML='<p style="color:#fff;padding:20px">The emulator could not load. Check your internet and refresh.</p>';};
+  if(withCors)s.crossOrigin='anonymous';   /* lets the service worker keep a copy for offline play */
+  s.onerror=function(){
+    s.remove();
+    if(withCors){loadLoader(false);return;}
+    $('#prog').hidden=true;var b=$('#gateBtn');b.disabled=false;b.textContent='Try again';b.onclick=function(){location.reload();};
+    $('#gateMsg').textContent='The emulator could not load. Check your internet and try again.';
+  };
   document.body.appendChild(s);
 }
 
@@ -606,6 +725,7 @@ function initCloud(){
 function userName(){return CLOUD.user&&CLOUD.user.email?CLOUD.user.email.split('@')[0]:'';}
 function paintAuth(){
   var b=$('#authBtn');if(b)b.textContent=CLOUD.user?userName():(CLOUD.on?'Log in':(sget('pgm:who')||'Log in'));
+  if(CLOUD.user&&CLOUD.db)syncProfile();
   var box=$('#slotBox');if(!box||!playId)return;
   box.hidden=!cloudConfigured();
   $('#slotGrid').hidden=!CLOUD.user;$('#slotBtns').hidden=!CLOUD.user;$('#csLogin').hidden=!!CLOUD.user;
@@ -819,6 +939,240 @@ function setupCloudUi(){
   paintSlots();
 }
 
+/* ============ offline copies of game files + tap-to-play start screen ============ */
+var ROM_CACHE='pgm-roms-v1',curGame=null,romAbs='',isCached=false,totalBytes=0;
+function hasCaches(){return typeof caches!=='undefined';}
+function romAbsUrl(g){return new URL(g.file,location.href).href;}
+function verKey(url){return 'pgm:rv:'+url;}
+function cachedMap(){
+  if(!hasCaches())return Promise.resolve({});
+  return caches.open(ROM_CACHE).then(function(c){return c.keys();}).then(function(ks){var o={};ks.forEach(function(k){o[k.url]=1;});return o;}).catch(function(){return {};});
+}
+function isFresh(g,map){var u=romAbsUrl(g);return !!map[u]&&String(sget(verKey(u)))===String(g.ver||1);}
+function putRom(url,blob,type,ver){
+  return caches.open(ROM_CACHE).then(function(c){
+    return c.put(url,new Response(blob,{headers:{'Content-Type':type||'application/octet-stream','Content-Length':String(blob.size)}}));
+  }).then(function(){sset(verKey(url),String(ver||1));});
+}
+function dropRom(url){
+  sdel(verKey(url));
+  return hasCaches()?caches.open(ROM_CACHE).then(function(c){return c.delete(url);}).catch(function(){}):Promise.resolve();
+}
+function markCached(){
+  cachedMap().then(function(map){
+    cards.forEach(function(c){
+      if(isFresh(c.g,map)){var a=c.el.querySelector('.cover');if(a&&!a.querySelector('.saved'))a.appendChild(h('span',{'class':'saved',text:'Saved'}));}
+    });
+  });
+}
+function fmtMB(b){return b>=1048576?(b/1048576).toFixed(b>=10485760?0:1)+' MB':Math.max(1,Math.round(b/1024))+' KB';}
+function headSize(url){return fetch(url,{method:'HEAD'}).then(function(r){return r.ok?(+r.headers.get('Content-Length')||0):0;}).catch(function(){return 0;});}
+function setProg(got,total,label){
+  var box=$('#prog'),bar=$('#pbar');box.hidden=false;
+  if(got===null||!total){bar.classList.add('ind');$('#pfill').style.width='';}
+  else{bar.classList.remove('ind');$('#pfill').style.width=Math.min(100,Math.round(got/total*100))+'%';}
+  $('#ptxt').textContent=label||(total?(fmtMB(got)+' of '+fmtMB(total)+' ('+Math.min(100,Math.round(got/total*100))+'%)'):(got?fmtMB(got)+' downloaded':'Starting...'));
+}
+function fetchRom(url,onProg){
+  return fetch(url,{cache:'reload'}).then(function(r){
+    if(!r.ok)throw new Error('http '+r.status);
+    var total=+r.headers.get('Content-Length')||0,type=r.headers.get('Content-Type')||'';
+    if(!r.body||!r.body.getReader)return r.blob().then(function(b){onProg(b.size,b.size);return {blob:b,type:type};});
+    var rd=r.body.getReader(),chunks=[],got=0;
+    return (function pump(){return rd.read().then(function(x){
+      if(x.done)return {blob:new Blob(chunks,{type:type}),type:type};
+      chunks.push(x.value);got+=x.value.length;onProg(got,total);return pump();
+    });})();
+  });
+}
+function paintGateMeta(){
+  var t=[];if(totalBytes)t.push(fmtMB(totalBytes));
+  t.push(isCached?'Saved on this phone, opens fast':'Downloads once, then opens fast');
+  $('#gateMeta').textContent=t.join(' · ');
+  var b=$('#gateBtn');if(!b.disabled)b.textContent=isCached?'Tap to play':'Download and play';
+}
+function setupGate(g){
+  curGame=g;romAbs=romAbsUrl(g);
+  $('#gateTitle').textContent=g.title;
+  $('#gateCover').appendChild(coverNode(g,false));
+  var bg=safeUrl(g.cover);if(bg)$('#gateBg').style.backgroundImage='url("'+bg.replace(/"/g,'%22')+'")';
+  paintGateMeta();
+  Promise.all([cachedMap(),headSize(romAbs)]).then(function(r){isCached=isFresh(g,r[0]);totalBytes=r[1]||totalBytes;paintGateMeta();});
+  $('#gateBtn').onclick=gateGo;
+}
+function gateGo(){
+  var btn=$('#gateBtn');btn.disabled=true;$('#gateMsg').textContent='';
+  addRecent(curGame.id);
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+  if(isCached){btn.textContent='Starting...';startEmulator();return;}
+  if(navigator.onLine===false){btn.disabled=false;$('#gateMsg').textContent='You are offline. Connect to the internet to download this game once.';return;}
+  btn.textContent='Downloading...';setProg(0,totalBytes);
+  fetchRom(romAbs,function(got,total){if(total)totalBytes=total;setProg(got,total||totalBytes);}).then(function(r){
+    totalBytes=r.blob.size;
+    var save=hasCaches()?putRom(romAbs,r.blob,r.type,curGame.ver).then(function(){isCached=true;}).catch(function(){}):Promise.resolve();
+    return save;
+  }).then(function(){btn.textContent='Starting...';startEmulator();}).catch(function(){
+    $('#prog').hidden=true;btn.disabled=false;btn.textContent='Try again';
+    $('#gateMsg').textContent='Download failed. Check your internet and try again.';
+  });
+}
+function showOffNote(){
+  var n=$('#offNote');if(!n||!curGame)return;
+  cachedMap().then(function(map){
+    if(!isFresh(curGame,map)){n.hidden=true;return;}
+    n.hidden=false;n.textContent='';
+    n.appendChild(h('b',{text:'Offline: '}));
+    n.appendChild(document.createTextNode('this game is saved on your phone for faster loading.'));
+    var rm=h('button',{type:'button','class':'linkbtn',text:'Remove'});
+    rm.addEventListener('click',function(){dropRom(romAbs).then(function(){n.textContent='Removed. It will download again next time.';});});
+    n.appendChild(rm);
+  });
+}
+
+/* ============ continue playing + favorites that follow your account ============ */
+var recent=[],favT=parseInt(sget('pgm:favT')||'0',10)||0,profTimer=null,profSynced=false;
+try{recent=JSON.parse(sget('pgm:recent')||'[]');if(!Array.isArray(recent))recent=[];}catch(e){recent=[];}
+function mergeRecent(a,b){
+  var m={};(a||[]).concat(b||[]).forEach(function(x){if(x&&x.id&&typeof x.t==='number'&&(!m[x.id]||x.t>m[x.id].t))m[x.id]={id:String(x.id),t:x.t};});
+  return Object.keys(m).map(function(k){return m[k];}).sort(function(p,q){return q.t-p.t;}).slice(0,8);
+}
+function addRecent(id){recent=mergeRecent([{id:id,t:Date.now()}],recent);sset('pgm:recent',JSON.stringify(recent));pushProfile();}
+function setFavs(list){favs=list;favT=Date.now();sset('pgm:fav',JSON.stringify(favs));sset('pgm:favT',String(favT));pushProfile();}
+function pushProfile(){
+  if(!CLOUD.user||!CLOUD.db||!profSynced)return;
+  clearTimeout(profTimer);
+  profTimer=setTimeout(function(){
+    savesRef().doc('profile').set({d:JSON.stringify({fav:favs,favT:favT,recent:recent}),t:Date.now(),n:0}).catch(function(){});
+  },800);
+}
+function syncProfile(){
+  if(!CLOUD.user||!CLOUD.db||profSynced)return;
+  savesRef().doc('profile').get().then(function(s){
+    var P=null;if(s.exists){try{P=JSON.parse(s.data().d);}catch(e){}}
+    var push=false;
+    if(P){
+      var pf=Array.isArray(P.fav)?P.fav:[],pt=P.favT||0;
+      if(favT===0&&favs.length){favs=favs.concat(pf.filter(function(x){return favs.indexOf(x)<0;}));favT=Date.now();push=true;}
+      else if(pt>favT){favs=pf;favT=pt;}
+      else if(favT>pt){push=true;}
+      var mr=mergeRecent(recent,P.recent);if(JSON.stringify(mr)!==JSON.stringify(P.recent||[]))push=true;recent=mr;
+    }else{if(!favT&&favs.length)favT=Date.now();push=true;}
+    sset('pgm:fav',JSON.stringify(favs));sset('pgm:favT',String(favT));sset('pgm:recent',JSON.stringify(recent));
+    profSynced=true;if(push)pushProfile();
+    if(cards.length){paint();applyFilter();}
+  }).catch(function(){});
+}
+function ago(t){
+  var s=(Date.now()-t)/1000;if(s<90)return 'just now';var m=s/60;if(m<60)return Math.round(m)+' min ago';
+  var hr=m/60;if(hr<24)return Math.round(hr)+' h ago';var d=hr/24;if(d<14)return Math.round(d)+' days ago';
+  try{return new Date(t).toLocaleDateString([], {day:'numeric',month:'short'});}catch(e){return 'a while ago';}
+}
+function renderContinue(){
+  var sec=$('#contSec'),row=$('#contRow');if(!sec||!row)return;
+  row.innerHTML='';
+  var items=filter==='all'&&!query.trim()?recent.map(function(r){return {r:r,g:visible().filter(function(x){return x.id===r.id;})[0]};}).filter(function(x){return x.g;}).slice(0,6):[];
+  sec.hidden=!items.length;
+  items.forEach(function(it){
+    var a=h('a',{'class':'cover',href:'?play='+encodeURIComponent(it.g.id),'aria-label':'Resume '+it.g.title});
+    a.appendChild(coverNode(it.g,true));a.appendChild(h('span',{'class':'go',text:'PLAY'}));
+    row.appendChild(h('div',{'class':'citem'},[a,h('b',{text:it.g.title}),h('small',{text:'Played '+ago(it.r.t)})]));
+  });
+}
+
+/* ============ About, Privacy, Terms ============ */
+function pageContent(name){
+  var site=DATA.site.title||'PokiGbaMon',c=DATA.site.contact,upd='Last updated: 24 October 2026';
+  if(name==='about')return {t:'About '+site,u:'',b:[
+    ['p',site+' is a small collection of Game Boy Advance games made by one creator. Every game on this site is an original creation. Pick a game, tap play, and it runs in your browser on a phone or a computer. Nothing to install.'],
+    ['h','How it runs'],
+    ['p','Games run in a browser-based emulator called EmulatorJS. The first time you open a game, its file is downloaded and kept on your device, so the next visit starts faster and uses less mobile data.'],
+    ['h','Saving your progress'],
+    ['p','Without an account, the emulator keeps saves inside your browser. If you clear your browser data, they are gone. With a free account (a username and a password, no email), your in-game saves and four save slots per game are stored online, so you can continue on any phone or computer.'],
+    ['h','Feedback'],
+    ['p','Found a bug or have an idea? Use Report a problem at the bottom of any page.'+(c?' You can also write to '+c+'.':'')]]};
+  if(name==='privacy')return {t:'Privacy Policy',u:upd,b:[
+    ['h','The short version'],
+    ['p','You can play without an account. If you create one, we store your username, your password (handled by Google Firebase, we cannot read it) and your game saves so you can continue on any device. We do not sell your data and we do not show ads at the moment.'],
+    ['h','What stays on your device'],
+    ['ul',['Your favorites, recently played games and speed setting.','Game files you opened, kept for faster loading. You can remove them on the game page.','The emulator’s own save data, kept in your browser.','Your login session, if you logged in.']],
+    ['h','What is stored online if you create an account'],
+    ['ul',['Your username. Behind the scenes it becomes a placeholder email address that is not real and receives nothing.','Your password, handled by Firebase Authentication. We never see it, and it cannot be recovered if you forget it.','Your game saves: in-game save files, game states and the four save slots for each game.','Your favorites and recently played list.']],
+    ['p','This data is stored with Google Firebase (Authentication and Firestore). Only your own account can read or change your saves.'],
+    ['h','Reports'],
+    ['p','If you send a report, we store your message, the game you picked, your browser and device details, and the contact you typed, if any. We use it only to fix problems.'],
+    ['h','Third parties'],
+    ['p','The emulator loads from cdn.emulatorjs.org, and login and online saves load from Google. Like any website you visit, these services can see your IP address and browser details when your device connects to them. If ads or analytics are added in the future, this page will be updated first.'],
+    ['h','Deleting your data'],
+    ['p','Log in, open your account, and choose Delete account. This removes your account and all your online saves, favorites and recent games. To remove data kept on your device, clear this site’s data in your browser.'],
+    ['h','Good to know'],
+    ['p','Please do not put personal details in your username or in reports. If this policy changes, the date above changes too.'+(c?' Questions: '+c+'.':'')]]};
+  if(name==='terms')return {t:'Terms of Use',u:upd,b:[
+    ['h','Using the site'],
+    ['p','Play the games for fun. By using this site you agree to these terms.'],
+    ['h','The games'],
+    ['p','All games on this site are original works by the site owner and belong to them. Please do not copy, resell or re-upload the games, or present them as your own.'],
+    ['h','Accounts and saves'],
+    ['ul',['You are responsible for your username and password. If you forget your password, the account cannot be recovered.','Saves are stored on a best-effort basis. They can be lost if you lose access to your account, if storage runs out, or if the service changes or stops. If your progress matters, keep a backup with Export Save File in the game menu.','Do not attack the site, create large numbers of accounts, or store anything other than your own game saves.']],
+    ['h','No warranty'],
+    ['p','The site and the games are provided as they are, with no promise that they will always work or be available. To the extent the law allows, the site owner is not liable for lost progress or other losses from using the site.'],
+    ['h','Changes'],
+    ['p','These terms may change. If you keep using the site after a change, you accept it.']]};
+  return null;
+}
+function openPage(name){
+  var c=pageContent(name);if(!c){location.replace('./');return;}
+  $('#pageView').hidden=false;$('#searchBox').hidden=true;
+  document.title=c.t+' | '+(DATA.site.title||'PokiGbaMon');
+  $('#docT').textContent=c.t;$('#docU').textContent=c.u;
+  var b=$('#docB');b.innerHTML='';
+  c.b.forEach(function(x){
+    if(x[0]==='h')b.appendChild(h('h2',{text:x[1]}));
+    else if(x[0]==='p')b.appendChild(h('p',{text:x[1]}));
+    else if(x[0]==='ul')b.appendChild(h('ul',{},x[1].map(function(t){return h('li',{text:t});})));
+  });
+}
+
+/* ============ report a problem ============ */
+function setupReport(){
+  var link=$('#reportLink');if(!link)return;
+  if(!cloudConfigured()){
+    if(DATA.site.contact)link.addEventListener('click',function(){location.href='mailto:'+DATA.site.contact+'?subject='+encodeURIComponent('Problem report: '+(DATA.site.title||'PokiGbaMon'));});
+    else link.hidden=true;
+    return;
+  }
+  link.addEventListener('click',openReport);
+  $('#rpClose').addEventListener('click',closeReport);
+  $('#rpOk').addEventListener('click',closeReport);
+  $('#rpModal').addEventListener('click',function(e){if(e.target===$('#rpModal'))closeReport();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeReport();});
+  $('#rpForm').addEventListener('submit',function(e){e.preventDefault();sendReport();});
+}
+function openReport(){
+  var sel=$('#rpGame');sel.innerHTML='';
+  sel.appendChild(h('option',{value:'',text:'Not about one game'}));
+  DATA.games.filter(function(g){return !g.hidden;}).forEach(function(g){var o=h('option',{value:g.id,text:g.title});sel.appendChild(o);});
+  sel.value=(playId&&visible().some(function(g){return g.id===playId;}))?playId:'';
+  $('#rpMsg').value='';$('#rpErr').textContent='';$('#rpForm').hidden=false;$('#rpDone').hidden=true;$('#rpGo').disabled=false;
+  $('#rpModal').hidden=false;setTimeout(function(){$('#rpMsg').focus();},50);
+}
+function closeReport(){$('#rpModal').hidden=true;}
+function sendReport(){
+  var err=$('#rpErr');err.textContent='';
+  var msg=$('#rpMsg').value.trim();
+  if(msg.length<5){err.textContent='Please describe the problem in a few words.';return;}
+  var last=parseInt(sget('pgm:rpT')||'0',10)||0;
+  if(Date.now()-last<60000){err.textContent='You just sent a report. Please wait a minute.';return;}
+  var go=$('#rpGo');go.disabled=true;
+  CLOUD.ready.then(function(ok){
+    if(!ok||!CLOUD.db)throw new Error('offline');
+    return CLOUD.db.collection('reports').add({
+      type:$('#rpType').value,game:$('#rpGame').value,msg:msg.slice(0,500),contact:$('#rpContact').value.trim().slice(0,100),
+      ua:String(navigator.userAgent||'').slice(0,250),t:Date.now(),uid:CLOUD.user?CLOUD.user.uid:''
+    });
+  }).then(function(){sset('pgm:rpT',String(Date.now()));$('#rpForm').hidden=true;$('#rpDone').hidden=false;})
+  .catch(function(e){go.disabled=false;err.textContent=(e&&e.code==='permission-denied')?'Reports are not switched on yet. Please try again later.':'Could not send. Check your internet and try again.';});
+}
+
 /* ============ creator: login ============ */
 var AUTH_KEY='pgm:auth',failN=0,lockUntil=0;
 function sha(str){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
@@ -921,8 +1275,8 @@ function wirePanel(){
     if(!delArmed){delArmed=true;$('#eDel').textContent='Tap again to delete';setTimeout(function(){delArmed=false;$('#eDel').textContent='Delete';},4000);return;}
     draft.games.splice(editIdx,1);saveDraft();closeEditor();renderList();
   };
-  ['sTitle','sTag','sNotice'].forEach(function(id){$('#'+id).addEventListener('input',function(){
-    draft.site.title=$('#sTitle').value;draft.site.tagline=$('#sTag').value;draft.site.notice=$('#sNotice').value;saveDraft();});});
+  ['sTitle','sTag','sNotice','sContact'].forEach(function(id){$('#'+id).addEventListener('input',function(){
+    draft.site.title=$('#sTitle').value;draft.site.tagline=$('#sTag').value;draft.site.notice=$('#sNotice').value;draft.site.contact=$('#sContact').value.trim();saveDraft();});});
   $('#gSave').onclick=function(){
     var c={owner:$('#gOwner').value.trim(),repo:$('#gRepo').value.trim(),branch:$('#gBranch').value.trim()||'main',token:$('#gToken').value.trim()};
     sset('pgm:git',JSON.stringify(c));gMsg('Saved on this phone.',true);
@@ -950,7 +1304,32 @@ function wirePanel(){
   };
   $('#fbOff').onclick=function(){delete draft.site.firebase;saveDraft();$('#fbCfg').value='';$('#fbMsg').style.color='';$('#fbMsg').textContent='Online saves turned off. Press Publish.';};
 }
-var FB_RULES="rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /users/{uid}/saves/{saveId} {\n      allow read, delete: if request.auth != null && request.auth.uid == uid;\n      allow create, update: if request.auth != null && request.auth.uid == uid\n        && request.resource.data.keys().hasOnly(['d','t','n'])\n        && request.resource.data.d is string\n        && request.resource.data.d.size() < 900000;\n    }\n  }\n}\n";
+var FB_RULES=[
+"rules_version = '2';",
+"service cloud.firestore {",
+"  match /databases/{database}/documents {",
+"    match /users/{uid}/saves/{saveId} {",
+"      allow read, delete: if request.auth != null && request.auth.uid == uid;",
+"      allow create, update: if request.auth != null && request.auth.uid == uid",
+"        && request.resource.data.keys().hasOnly(['d','t','n'])",
+"        && request.resource.data.d is string",
+"        && request.resource.data.d.size() < 900000;",
+"    }",
+"    match /reports/{reportId} {",
+"      allow create: if request.resource.data.keys().hasOnly(['type','game','msg','contact','ua','t','uid'])",
+"        && request.resource.data.type is string && request.resource.data.type.size() <= 40",
+"        && request.resource.data.game is string && request.resource.data.game.size() <= 60",
+"        && request.resource.data.msg is string && request.resource.data.msg.size() > 0",
+"        && request.resource.data.msg.size() <= 600",
+"        && request.resource.data.contact is string && request.resource.data.contact.size() <= 100",
+"        && request.resource.data.ua is string && request.resource.data.ua.size() <= 300",
+"        && request.resource.data.uid is string && request.resource.data.uid.size() <= 40",
+"        && request.resource.data.t is number;",
+"      allow read, update, delete: if false;",
+"    }",
+"  }",
+"}",
+""].join('\n');
 function parseFbConfig(txt){
   txt=String(txt||'');var a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return null;
   var s=txt.slice(a,b+1).replace(/^\s*\/\/.*$/gm,'').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,'}');
@@ -962,7 +1341,7 @@ function parseFbConfig(txt){
 function gMsg(t,ok){var m=$('#gMsg');m.textContent=t;m.className='err'+(ok?' ok':'');}
 function renderGit(){var c=gitCfg();$('#gOwner').value=c.owner;$('#gRepo').value=c.repo;$('#gBranch').value=c.branch;$('#gToken').value=c.token;}
 function renderSite(){
-  $('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;
+  $('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;$('#sContact').value=draft.site.contact||'';
   $('#fbCfg').value=draft.site.firebase?JSON.stringify(draft.site.firebase,null,2):'';
 }
 function renderList(){
@@ -996,7 +1375,7 @@ function openEditor(i){
   $('#eTitle').value=g.title;$('#eId').value=g.id;$('#eId').dataset.touched=i>=0?'1':'';
   $('#eId').readOnly=i>=0;$('#eIdHint').textContent=i>=0?'The ID cannot be changed, because saves are stored under it.':'Small letters and numbers only. Do not change this later, or players lose their saves.';
   $('#eGenre').value=g.genre;$('#eDesc').value=g.description;$('#eFile').value=g.file;$('#eCover').value=g.cover;
-  $('#eBadge').value=g.badge;$('#eHowto').value=g.howto;$('#eHidden').checked=g.hidden;
+  $('#eBadge').value=g.badge;$('#eHowto').value=g.howto;$('#eHidden').checked=g.hidden;$('#eVer').value=g.ver||1;
   $('#eErr').textContent='';$('#upMsg').textContent='Needs the GitHub token. You can also upload on github.com.';$('#eUp').value='';
   $('#eDel').hidden=i<0;$('#eDel').textContent='Delete';
   $('#listSec').hidden=true;$('#editor').hidden=false;previewCover();
@@ -1006,7 +1385,7 @@ function closeEditor(){editIdx=-2;$('#editor').hidden=true;$('#listSec').hidden=
 function saveEditor(){
   var err=$('#eErr');err.textContent='';
   var g={title:$('#eTitle').value.trim(),id:$('#eId').value.trim().toLowerCase(),genre:$('#eGenre').value.trim()||'Game',description:$('#eDesc').value.trim(),
-    file:$('#eFile').value.trim().replace(/^\/+/,''),cover:$('#eCover').value.trim(),badge:$('#eBadge').value,howto:$('#eHowto').value.trim(),hidden:$('#eHidden').checked};
+    file:$('#eFile').value.trim().replace(/^\/+/,''),cover:$('#eCover').value.trim(),badge:$('#eBadge').value,howto:$('#eHowto').value.trim(),hidden:$('#eHidden').checked,ver:Math.max(1,parseInt($('#eVer').value,10)||1)};
   if(!g.title){err.textContent='Add a game title.';return;}
   if(!/^[a-z0-9][a-z0-9-]*$/.test(g.id)){err.textContent='Game ID: use small letters, numbers and dashes only.';return;}
   if(!g.file||!/^[a-z0-9_\-\.\/ ]+$/i.test(g.file)||g.file.indexOf('..')>=0){err.textContent='Add the game file name, like roms/pokfd.zip.';return;}
@@ -1024,7 +1403,9 @@ function uploadRom(){
   if(!/\.(gba|zip)$/.test(name)){m.textContent='Only .gba or .zip files.';return;}
   var btn=$('#upBtn');btn.disabled=true;m.textContent='Uploading '+(f.size/1048576).toFixed(1)+' MB. Keep this page open...';
   f.arrayBuffer().then(function(buf){return gitPut(c,path,bufToB64(buf),'Add game file '+name);}).then(function(){
-    $('#eFile').value=path;m.textContent='Uploaded as '+path+'. Save the game, then Publish.';m.style.color='var(--ok)';
+    $('#eFile').value=path;
+    if(editIdx>=0)$('#eVer').value=(parseInt($('#eVer').value,10)||1)+1;   /* new file, so players download it again */
+    m.textContent='Uploaded as '+path+'. Save the game, then Publish.';m.style.color='var(--ok)';
   }).catch(function(e){m.style.color='var(--danger)';m.textContent=e&&e.status?gitErr(e.status):'Upload failed. Check your internet and try again.';}).then(function(){btn.disabled=false;});
 }
 function publish(){
