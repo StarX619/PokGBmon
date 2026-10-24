@@ -5,104 +5,169 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PokiGbaMon</title>
 <meta name="description" content="Play GBA games free in your browser. No install, no account.">
+<meta name="theme-color" content="#eceaf4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f0d1c" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <style>
 :root{
   color-scheme:light dark;
   --bg:#eceaf4; --surface:#fbfaff; --ink:#1c1a33; --muted:#5a5679; --line:#d4d0e6;
-  --accent:#4f46a5; --on-accent:#fff; --chip:#e1ddf0; --heart:#cf2f57;
+  --accent:#4f46a5; --on-accent:#fff; --chip:#e1ddf0; --heart:#cf2f57; --danger:#b3243f; --ok:#1f7a4d;
   --font-display:"Pixelify Sans","Courier New",monospace;
   --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#0f0d1c;--surface:#1a1731;--ink:#ece9fb;--muted:#a9a3cb;--line:#2f2a50;--accent:#a99fff;--on-accent:#17133a;--chip:#27224a;--heart:#ff6b8d}
+  :root{--bg:#0f0d1c;--surface:#1a1731;--ink:#ece9fb;--muted:#a9a3cb;--line:#2f2a50;--accent:#a99fff;--on-accent:#17133a;--chip:#27224a;--heart:#ff6b8d;--danger:#ff8fa3;--ok:#6fd39b}
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);-webkit-text-size-adjust:100%}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font-body);overflow-x:hidden}
+button,a.btn,.chip,.sp,.heart,.cover{touch-action:manipulation}
 button{font:inherit;color:inherit}
+input,textarea,select{font:16px var(--font-body);color:var(--ink)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
-header{border-bottom:1px solid var(--line)}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:14px;flex-wrap:wrap}
-.logo{font:700 24px/1 var(--font-display);letter-spacing:.01em;text-decoration:none;color:inherit}
-.search{flex:1 1 220px;max-width:340px}
-.search input{width:100%;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 14px;font:500 14px var(--font-body)}
+[hidden]{display:none!important}
 h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
-.intro{padding-block:26px 6px}
-.intro h1{font-size:clamp(26px,5vw,42px)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+
+/* header */
+.hdr{border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;padding-block:12px;flex-wrap:wrap}
+.logo{font:700 24px/1 var(--font-display);text-decoration:none;color:inherit;min-height:40px;display:inline-flex;align-items:center}
+.search{flex:1 1 220px;max-width:360px}
+.search input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px}
+.notice{background:var(--accent);color:var(--on-accent);padding:10px max(16px,env(safe-area-inset-left));text-align:center;font-size:14px;font-weight:600}
+
+/* home */
+.intro{padding-block:22px 4px}
+.intro h1{font-size:clamp(26px,7vw,42px)}
 .intro p{margin:8px 0 0;color:var(--muted);max-width:60ch}
-.tools{display:flex;gap:10px 14px;justify-content:space-between;align-items:end;flex-wrap:wrap;padding-block:18px 12px}
+.tools{display:flex;flex-direction:column;gap:10px;padding-block:16px 12px}
 .count{font-size:13px;color:var(--muted)}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-inline:calc(-1*max(16px,env(safe-area-inset-left)));padding-inline:max(16px,env(safe-area-inset-left));scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:40px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px 16px;padding-bottom:30px}
-.card{display:grid;gap:8px;align-content:start;min-width:0}
-.cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:8px;overflow:hidden;background:#000;cursor:pointer}
-.cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:20px 14px;padding-bottom:28px}
+.card{display:grid;gap:6px;align-content:start;min-width:0}
+.cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:10px;overflow:hidden;background:#000;cursor:pointer}
+.cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.cover canvas{image-rendering:pixelated}
 .cover .go{position:absolute;inset:0;display:grid;place-items:center;background:rgba(12,9,36,.55);color:#fff;font:700 18px var(--font-display);opacity:0;transition:opacity .15s}
-.cover:hover .go,.cover:focus-visible .go{opacity:1}
-.meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.meta h3{font-size:17px}
+@media (hover:hover){.cover:hover .go{opacity:1}}
+.cover:focus-visible .go{opacity:1}
+.badge{position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:999px;background:var(--heart);color:#fff;font:700 11px var(--font-body);letter-spacing:.04em;text-transform:uppercase}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.meta h3{font-size:17px;min-width:0;overflow-wrap:anywhere}
 .genre{font-size:12px;color:var(--muted)}
-.desc{font-size:13px;color:var(--muted);margin:0}
-.heart{flex:none;width:36px;height:36px;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted)}
-.heart:hover{background:var(--chip)}
-.heart svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.desc{font-size:13px;color:var(--muted);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.heart{flex:none;width:44px;height:44px;margin:-6px -8px -6px 0;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted)}
+.heart svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .heart[aria-pressed="true"]{color:var(--heart)}
 .heart[aria-pressed="true"] svg{fill:currentColor}
 .msg{padding:30px 0;color:var(--muted)}
-.how{border-top:1px solid var(--line);padding-block:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.how{border-top:1px solid var(--line);padding-block:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .how h3{font-size:16px;margin-bottom:4px}
 .how p{margin:0;color:var(--muted);font-size:14px}
-footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);font-size:13px}
+footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-area-inset-bottom));color:var(--muted);font-size:13px}
+.foot{display:flex;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;align-items:center}
+.foot a{color:var(--muted);min-height:40px;display:inline-flex;align-items:center}
 
-/* player page */
-.player{padding-block:16px 30px}
-.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.back{min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;color:inherit}
-.top h1{font-size:clamp(22px,4vw,30px)}
-.stage{background:#000;border-radius:12px;overflow:hidden;width:100%;max-width:760px;height:min(78vh,620px);margin:0 auto}
+/* buttons + forms */
+.btn{min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:inherit}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.sm{min-height:40px;padding:0 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-weight:700;font-size:14px}
+.field small{color:var(--muted);font-size:13px}
+.field input,.field textarea,.field select{width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:10px 14px}
+.field textarea{min-height:90px;resize:vertical}
+.field input[type=checkbox]{width:22px;min-height:22px}
+.check{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-weight:600}
+.err{color:var(--danger);font-size:14px;margin:8px 0 0;min-height:20px}
+.ok{color:var(--ok)}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+
+/* player */
+.player{padding-block:14px 26px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{font-size:clamp(20px,5vw,30px);min-width:0;overflow-wrap:anywhere}
+.stage{position:relative;background:#000;border-radius:12px;overflow:hidden;width:100%;max-width:760px;height:min(74vh,640px);margin:0 auto;overscroll-behavior:contain;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+@supports (height:1dvh){.stage{height:min(74dvh,640px)}}
 @media (min-width:760px){.stage{height:auto;aspect-ratio:3/2}}
 #game{width:100%;height:100%}
-.tips{max-width:760px;margin:14px auto 0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
-.tips b{color:var(--ink)}
-.stage{position:relative}
 .stage:fullscreen,.stage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;border-radius:0;aspect-ratio:auto}
 .ctl{max-width:760px;margin:12px auto 0;display:flex;gap:10px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .speed{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .speed .lbl{font:700 12px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.sp{min-width:48px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;cursor:pointer;font-variant-numeric:tabular-nums}
+.sp{min-width:48px;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px;cursor:pointer;font-variant-numeric:tabular-nums}
 .sp[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.fsb{min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer}
 .ctlmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
 .fsbar{position:absolute;top:calc(8px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));z-index:2147483000;display:none;gap:8px}
 .stage:fullscreen .fsbar,.stage:-webkit-full-screen .fsbar{display:flex}
-.fsbar button{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(10,8,30,.6);color:#fff;font-weight:700;font-size:13px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-[hidden]{display:none!important}
+.fsbar button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(10,8,30,.6);color:#fff;font-weight:700;font-size:14px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.tips{max-width:760px;margin:14px auto 0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.tips b{color:var(--ink)}
+@media (orientation:landscape) and (max-height:520px){
+  .player{padding-block:6px}
+  .top{margin-bottom:6px}
+  .stage{height:calc(100vh - 70px);max-width:none;aspect-ratio:auto}
+  @supports (height:1dvh){.stage{height:calc(100dvh - 70px)}}
+  .tips{display:none}
+}
+
+/* creator */
+.cbox{max-width:460px;margin:22px auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.cbox h1{font-size:26px;margin-bottom:14px}
+.ptop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:18px 10px}
+.ptop h1{font-size:24px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+.sec h2{font-size:20px;margin-bottom:10px}
+.hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+.glist{display:grid;gap:10px;margin-top:14px}
+.grow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px 12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}
+.grow img,.grow canvas{width:64px;height:43px;border-radius:6px;object-fit:cover;display:block;background:#000}
+.grow .t{min-width:0}
+.grow .t b{display:block;overflow-wrap:anywhere}
+.grow .t span{font-size:12px;color:var(--muted)}
+.grow .act{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--chip);font-size:11px;font-weight:700;margin-left:6px;color:var(--muted)}
+.prev{width:100%;max-width:300px;aspect-ratio:3/2;border-radius:10px;background:#000;overflow:hidden;margin-top:8px}
+.prev img,.prev canvas{width:100%;height:100%;object-fit:cover;display:block}
+.pubbar{position:sticky;bottom:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border-top:1px solid var(--line);margin-inline:calc(-1*max(16px,env(safe-area-inset-left)));padding:10px max(16px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom))}
+.pubbar span{font-size:14px;min-width:0}
+.steps{margin:0 0 12px;padding-left:20px;font-size:14px;color:var(--muted)}
+.steps li{margin-bottom:4px}
 </style>
 </head>
 <body>
 
-<header>
+<header class="hdr">
   <div class="wrap bar">
-    <a class="logo" href="./">PokiGbaMon</a>
+    <a class="logo" id="logo" href="./">PokiGbaMon</a>
     <div class="search" id="searchBox">
       <label for="q" style="position:absolute;left:-9999px">Search games</label>
-      <input id="q" type="search" placeholder="Search games" autocomplete="off">
+      <input id="q" type="search" placeholder="Search games" autocomplete="off" enterkeyhint="search">
     </div>
   </div>
 </header>
+<div class="notice" id="notice" hidden></div>
 
 <main>
   <!-- HOME -->
-  <div id="home">
+  <div id="home" hidden>
     <section class="wrap intro">
-      <h1>Pick a game. Press play.</h1>
+      <h1 id="tagline">Pick a game. Press play.</h1>
       <p>Free GBA games that run right in your browser, on phone or computer. No install and no account.</p>
     </section>
     <section class="wrap" aria-label="Games">
       <div class="tools">
-        <div class="count" id="count"></div>
+        <div class="count" id="count">Loading games...</div>
         <div class="chips" id="chips"></div>
       </div>
       <div class="grid" id="grid"></div>
@@ -110,7 +175,7 @@ footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);fo
     </section>
     <section class="wrap how">
       <div><h3>Saving your progress</h3><p>In-game saves stay in this browser. Use the same phone and browser, and do not clear site data.</p></div>
-      <div><h3>Move to another device</h3><p>Open the game menu and use Save File (download) and Load Save File (upload).</p></div>
+      <div><h3>Move to another device</h3><p>Open the game menu and use Export Save File and Import Save File.</p></div>
       <div><h3>Loading time</h3><p>Games are around 15 MB. The first load can take a moment on mobile data. Wi-Fi is faster.</p></div>
     </section>
   </div>
@@ -118,7 +183,7 @@ footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);fo
   <!-- PLAYER -->
   <div id="playerPage" class="wrap player" hidden>
     <div class="top">
-      <a class="back" href="./">&larr; All games</a>
+      <a class="btn" href="./">&larr; All games</a>
       <h1 id="pTitle"></h1>
     </div>
     <div class="stage">
@@ -129,104 +194,219 @@ footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);fo
       </div>
     </div>
     <div class="ctl">
-      <div class="speed" id="speed" role="group" aria-label="Game speed">
-        <span class="lbl">Speed</span>
-      </div>
-      <button type="button" class="fsb" id="fsBtn">Fullscreen + Rotate</button>
+      <div class="speed" id="speed" role="group" aria-label="Game speed"><span class="lbl">Speed</span></div>
+      <button type="button" class="btn primary" id="fsBtn">Fullscreen + Rotate</button>
     </div>
     <div class="ctlmsg" id="ctlmsg" role="status" aria-live="polite"></div>
     <div class="tips">
+      <div id="howto" hidden></div>
       <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
       <div><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
-      <div><b>Backup:</b> menu, then Save File, to download your save and keep it safe.</div>
+      <div><b>Backup:</b> menu, then Export Save File, to download your save and keep it safe.</div>
     </div>
+  </div>
+
+  <!-- CREATOR -->
+  <div id="creator" class="wrap" hidden>
+    <section class="cbox" id="loginBox" hidden>
+      <h1>Creator login</h1>
+      <form id="loginForm">
+        <div class="field"><label for="lu">Username</label><input id="lu" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+        <div class="field"><label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password"></div>
+        <button class="btn primary" type="submit" style="width:100%">Log in</button>
+        <p class="err" id="lerr" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="panel" hidden>
+      <div class="ptop"><h1>Creator panel</h1><button type="button" class="btn sm" id="logout">Log out</button></div>
+      <div class="tabs" id="ctabs">
+        <button type="button" class="chip" data-t="games" aria-pressed="true">Games</button>
+        <button type="button" class="chip" data-t="site" aria-pressed="false">Site</button>
+        <button type="button" class="chip" data-t="git" aria-pressed="false">GitHub</button>
+      </div>
+
+      <div id="tGames">
+        <div class="sec" id="listSec">
+          <h2>Your games</h2>
+          <p class="hint">Changes stay as a draft on this phone until you press Publish.</p>
+          <button type="button" class="btn primary" id="addGame">+ Add game</button>
+          <div class="glist" id="glist"></div>
+        </div>
+        <form class="sec" id="editor" hidden>
+          <h2 id="eHead">Add game</h2>
+          <div class="field"><label for="eTitle">Game title</label><input id="eTitle" maxlength="60" autocomplete="off"></div>
+          <div class="field"><label for="eId">Game ID</label><input id="eId" maxlength="40" autocapitalize="none" autocomplete="off" spellcheck="false"><small id="eIdHint">Small letters and numbers only. Do not change this later, or players lose their saves.</small></div>
+          <div class="field"><label for="eGenre">Genre</label><input id="eGenre" list="genres" maxlength="24" autocomplete="off"><datalist id="genres"></datalist></div>
+          <div class="field"><label for="eDesc">Short description</label><textarea id="eDesc" maxlength="200"></textarea></div>
+          <div class="field"><label for="eFile">Game file name</label><input id="eFile" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="roms/pokfd.zip"><small>Path of the .gba or .zip file in your GitHub repo.</small></div>
+          <div class="field">
+            <label for="eUp">Upload game file (optional)</label>
+            <input id="eUp" type="file" accept=".gba,.zip">
+            <button type="button" class="btn sm" id="upBtn" style="justify-self:start">Upload to site</button>
+            <small id="upMsg">Needs the GitHub token. You can also upload on github.com.</small>
+          </div>
+          <div class="field"><label for="eCover">Cover image link</label><input id="eCover" type="url" inputmode="url" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="https://i.ibb.co/..."><small id="cvMsg">On ImgBB use the Direct link (starts with https://i.ibb.co/).</small>
+            <div class="prev" id="cvPrev"></div></div>
+          <div class="field"><label for="eBadge">Badge</label><select id="eBadge"><option value="">None</option><option>New</option><option>Hot</option><option>Updated</option></select></div>
+          <div class="field"><label for="eHowto">Controls or tips for this game</label><textarea id="eHowto" maxlength="200" placeholder="A = Z, B = X. Press Start to open the menu."></textarea></div>
+          <label class="check"><input type="checkbox" id="eHidden"> Hide this game from the site</label>
+          <p class="err" id="eErr" role="alert"></p>
+          <div class="btnrow">
+            <button type="submit" class="btn primary">Save game</button>
+            <button type="button" class="btn" id="eCancel">Cancel</button>
+            <button type="button" class="btn danger" id="eDel" hidden>Delete</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="tSite" hidden>
+        <div class="sec">
+          <h2>Site</h2>
+          <div class="field"><label for="sTitle">Site name</label><input id="sTitle" maxlength="30"></div>
+          <div class="field"><label for="sTag">Home page headline</label><input id="sTag" maxlength="60"></div>
+          <div class="field"><label for="sNotice">Top banner message</label><input id="sNotice" maxlength="120" placeholder="Leave empty for no banner"></div>
+        </div>
+      </div>
+
+      <div id="tGit" hidden>
+        <div class="sec">
+          <h2>GitHub connection</h2>
+          <p class="hint">Publishing needs a GitHub token. Make it once:</p>
+          <ol class="steps">
+            <li>On github.com open Settings, Developer settings, Personal access tokens, Fine-grained tokens.</li>
+            <li>Generate new token. Repository access: only your site repository.</li>
+            <li>Permissions: Contents, Read and write. Pick the longest expiry.</li>
+            <li>Copy the token and paste it below.</li>
+          </ol>
+          <div class="field"><label for="gOwner">GitHub username</label><input id="gOwner" autocapitalize="none" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label for="gRepo">Repository name</label><input id="gRepo" autocapitalize="none" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label for="gBranch">Branch</label><input id="gBranch" autocapitalize="none" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label for="gToken">Token</label><input id="gToken" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="github_pat_..."><small>Saved only on this phone. It is never put in the site files.</small></div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="gSave">Save</button>
+            <button type="button" class="btn" id="gTest">Test connection</button>
+            <button type="button" class="btn danger" id="gClear">Remove token</button>
+          </div>
+          <p class="err" id="gMsg" role="status"></p>
+        </div>
+      </div>
+
+      <div class="pubbar" id="pubbar">
+        <span id="pubTxt">No changes</span>
+        <button type="button" class="btn primary" id="pubBtn" disabled>Publish</button>
+      </div>
+    </section>
   </div>
 </main>
 
-<footer><div class="wrap">PokiGbaMon. All games on this site are original creations by the site owner.</div></footer>
+<footer><div class="wrap foot"><span id="fnote">All games on this site are original creations by the site owner.</span><a href="?creator" id="creatorLink">Creator login</a></div></footer>
 
 <script>
 (function(){
 'use strict';
 var $=function(s){return document.querySelector(s);};
 var HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.6-9.3-9A5.4 5.4 0 0 1 12 6.6 5.4 5.4 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>';
+var CRED_HASH='42afab626c582f317935bd2c55ea73989e3423f4153608394fc9f309fc2eb295';
 var mem={};
-function sget(k){try{var v=localStorage.getItem(k);if(v!==null)return v;}catch(e){}return mem[k]||null;}
+function sget(k){try{var v=localStorage.getItem(k);if(v!==null)return v;}catch(e){}return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;}
 function sset(k,v){mem[k]=v;try{localStorage.setItem(k,v);}catch(e){}}
+function sdel(k){delete mem[k];try{localStorage.removeItem(k);}catch(e){}}
+function h(t,a,kids){var e=document.createElement(t);if(a)for(var x in a){if(x==='class')e.className=a[x];else if(x==='text')e.textContent=a[x];else e.setAttribute(x,a[x]);}(kids||[]).forEach(function(c){if(c)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});return e;}
+function safeUrl(u){u=String(u||'').trim();if(/^https?:\/\//i.test(u))return u;if(/^[a-z0-9_\-\.\/]+$/i.test(u)&&u.indexOf('..')<0)return u;return '';}
+function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);}
 
 var params=new URLSearchParams(location.search);
-var playId=params.get('play');
-var GAMES=[],favs=[],filter='all',query='';
+var playId=params.get('play'),wantCreator=params.has('creator');
+var DEFAULT_SITE={title:'PokiGbaMon',tagline:'Pick a game. Press play.',notice:''};
+var DATA={site:Object.assign({},DEFAULT_SITE),games:[]};
+var favs=[],filter='all',query='';
 try{favs=JSON.parse(sget('pgm:fav')||'[]');if(!Array.isArray(favs))favs=[];}catch(e){favs=[];}
 
-fetch('games.json',{cache:'no-cache'}).then(function(r){
-  if(!r.ok)throw new Error('games.json not found');return r.json();
-}).then(function(d){
-  GAMES=(d.games||d||[]).filter(function(g){return g&&g.id&&g.file;});
-  GAMES.forEach(function(g){g.title=g.title||g.id;g.genre=g.genre||'Game';g.description=g.description||'';});
-  playId?openPlayer():openHome();
-}).catch(function(){
-  $('#home').hidden=false;$('#searchBox').hidden=true;
-  showMsg('games.json could not be loaded. Check that the file is uploaded next to index.html.');
-});
+function normalize(d){
+  d=d||{};var list=Array.isArray(d)?d:(d.games||[]);
+  var site=Object.assign({},DEFAULT_SITE,(!Array.isArray(d)&&d.site)||{});
+  return {site:{title:String(site.title||''),tagline:String(site.tagline||''),notice:String(site.notice||'')},
+    games:list.filter(function(g){return g&&g.id&&g.file;}).map(function(g){return {id:String(g.id),title:String(g.title||g.id),genre:String(g.genre||'Game'),description:String(g.description||''),file:String(g.file),cover:String(g.cover||''),badge:String(g.badge||''),howto:String(g.howto||''),hidden:!!g.hidden};})};
+}
+function applySite(){
+  var s=DATA.site;
+  if(s.title){$('#logo').textContent=s.title;}
+  $('#tagline').textContent=s.tagline||DEFAULT_SITE.tagline;
+  var n=$('#notice');n.textContent=s.notice||'';n.hidden=!s.notice;
+}
 
+/* ============ boot ============ */
+function boot(){
+  if(wantCreator){openCreator();return;}
+  fetch('games.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
+    DATA=normalize(d);applySite();
+    playId?openPlayer():openHome();
+  }).catch(function(){
+    $('#home').hidden=false;$('#searchBox').hidden=true;$('#count').textContent='';
+    showMsg('games.json could not be loaded. Check that the file is uploaded next to index.html.');
+  });
+}
 function showMsg(t){var m=$('#msg');m.textContent=t;m.hidden=!t;}
 
-/* ----- generated cover: pixel art from the title, used when no cover image is given ----- */
-function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+/* ============ covers ============ */
+function hash(s){var x=2166136261;for(var i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619);}return x>>>0;}
 function makeCover(canvas,g){
   var W=96,H=64;canvas.width=W;canvas.height=H;var c=canvas.getContext('2d');
-  var h=hash(g.id+g.title),hue=h%360;
+  var hs=hash(g.id+g.title),hue=hs%360;
   c.fillStyle='hsl('+hue+' 55% 22%)';c.fillRect(0,0,W,H);
   c.fillStyle='hsl('+((hue+40)%360)+' 55% 32%)';c.fillRect(0,38,W,26);
-  var r=h;function rn(){r=Math.imul(r^(r>>>15),2246822519)>>>0;r=Math.imul(r^(r>>>13),3266489917)>>>0;r^=r>>>16;return r>>>0;}
+  var r=hs;function rn(){r=Math.imul(r^(r>>>15),2246822519)>>>0;r=Math.imul(r^(r>>>13),3266489917)>>>0;r^=r>>>16;return r>>>0;}
   var i,x,y;
   for(i=0;i<22;i++){x=rn()%W;y=rn()%34;c.fillStyle='rgba(255,255,255,.55)';c.fillRect(x,y,1,1);}
   c.fillStyle='hsl('+((hue+180)%360)+' 70% 62%)';
-  for(i=0;i<5;i++){x=(i*19+(rn()%8))%(W-14);y=36+(rn()%18);var w=6+rn()%8,hh=4+rn()%7;c.fillRect(x,y,w,hh);}
+  for(i=0;i<5;i++){x=(i*19+(rn()%8))%(W-14);y=36+(rn()%18);c.fillRect(x,y,6+rn()%8,4+rn()%7);}
   c.fillStyle='hsl('+((hue+60)%360)+' 85% 70%)';
   var sx=10+rn()%60,sy=6+rn()%12;c.fillRect(sx,sy,8,8);c.fillStyle='rgba(0,0,0,.35)';c.fillRect(sx+2,sy+2,2,2);
   c.fillStyle='rgba(0,0,0,.5)';c.fillRect(0,H-14,W,14);
   c.fillStyle='#fff';c.font='9px "Pixelify Sans",monospace';c.textBaseline='middle';
-  var t=g.title.length>16?g.title.slice(0,15)+'.':g.title;c.fillText(t,4,H-7);
+  c.fillText(g.title.length>16?g.title.slice(0,15)+'.':g.title,4,H-7);
+}
+function coverNode(g,lazy){
+  var url=safeUrl(g.cover);
+  function fallback(){var cv=document.createElement('canvas');makeCover(cv,g);return cv;}
+  if(!url)return fallback();
+  var im=document.createElement('img');im.alt='';im.decoding='async';if(lazy)im.loading='lazy';im.referrerPolicy='no-referrer';
+  im.onerror=function(){if(im.parentNode)im.parentNode.replaceChild(fallback(),im);};
+  im.src=url;return im;
 }
 
-/* ----- home ----- */
+/* ============ home ============ */
+var cards=[];
+function visible(){return DATA.games.filter(function(g){return !g.hidden;});}
 function openHome(){
   $('#home').hidden=false;
   buildChips();buildGrid();applyFilter();
   $('#q').addEventListener('input',function(e){query=e.target.value;applyFilter();});
 }
-var cards=[];
 function buildChips(){
-  var gen=[];GAMES.forEach(function(g){if(gen.indexOf(g.genre)<0)gen.push(g.genre);});
+  var gen=[];visible().forEach(function(g){if(gen.indexOf(g.genre)<0)gen.push(g.genre);});
   var list=[['all','All']].concat(gen.map(function(x){return [x,x];})).concat([['fav','Favorites']]);
-  var el=$('#chips');
+  var el=$('#chips');el.innerHTML='';
   list.forEach(function(f){
-    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=f[1];b.setAttribute('aria-pressed',String(f[0]===filter));
+    var b=h('button',{type:'button','class':'chip',text:f[1],'aria-pressed':String(f[0]===filter)});
     b.addEventListener('click',function(){filter=f[0];el.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});applyFilter();});
     el.appendChild(b);
   });
 }
 function buildGrid(){
   var grid=$('#grid');grid.innerHTML='';cards=[];
-  GAMES.forEach(function(g){
-    var el=document.createElement('article');el.className='card';
-    var a=document.createElement('a');a.className='cover';a.href='?play='+encodeURIComponent(g.id);a.setAttribute('aria-label','Play '+g.title);
-    if(g.cover){var im=document.createElement('img');im.src=g.cover;im.alt='';im.loading='lazy';a.appendChild(im);}
-    else{var cv=document.createElement('canvas');makeCover(cv,g);a.appendChild(cv);}
-    var go=document.createElement('span');go.className='go';go.textContent='PLAY';a.appendChild(go);
-    var meta=document.createElement('div');meta.className='meta';
-    var h=document.createElement('h3');h.textContent=g.title;
-    var hb=document.createElement('button');hb.type='button';hb.className='heart';hb.innerHTML=HEART;hb.setAttribute('aria-label','Favorite '+g.title);
+  visible().forEach(function(g){
+    var a=h('a',{'class':'cover',href:'?play='+encodeURIComponent(g.id),'aria-label':'Play '+g.title});
+    a.appendChild(coverNode(g,true));
+    if(g.badge)a.appendChild(h('span',{'class':'badge',text:g.badge}));
+    a.appendChild(h('span',{'class':'go',text:'PLAY'}));
+    var hb=h('button',{type:'button','class':'heart','aria-label':'Favorite '+g.title});hb.innerHTML=HEART;
     hb.addEventListener('click',function(){
       var k=favs.indexOf(g.id);if(k>=0)favs.splice(k,1);else favs.push(g.id);
       sset('pgm:fav',JSON.stringify(favs));paint();applyFilter();
     });
-    meta.appendChild(h);meta.appendChild(hb);
-    var gen=document.createElement('div');gen.className='genre';gen.textContent=g.genre;
-    el.appendChild(a);el.appendChild(meta);el.appendChild(gen);
-    if(g.description){var d=document.createElement('p');d.className='desc';d.textContent=g.description;el.appendChild(d);}
+    var el=h('article',{'class':'card'},[a,h('div',{'class':'meta'},[h('h3',{text:g.title}),hb]),h('div',{'class':'genre',text:g.genre}),g.description?h('p',{'class':'desc',text:g.description}):null]);
     grid.appendChild(el);cards.push({g:g,el:el,heart:hb});
   });
   paint();
@@ -241,22 +421,21 @@ function applyFilter(){
     c.el.hidden=!ok;if(ok)n++;
   });
   $('#count').textContent=n+(n===1?' game':' games');
-  showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(GAMES.length?'No games match. Try another search or filter.':'No games added yet.')));
+  showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(cards.length?'No games match. Try another search or filter.':'No games added yet.')));
 }
 
-/* ----- speed, fullscreen + rotate, wake lock ----- */
+/* ============ player ============ */
 var SPEEDS=[1,1.5,2,3,4],speed=1,started=false,wake=null;
 try{var sv=parseFloat(sget('pgm:speed'));if(SPEEDS.indexOf(sv)>=0)speed=sv;}catch(e){}
 function ctlMsg(t){var m=$('#ctlmsg');if(m)m.textContent=t||'';}
-function fmt(x){return (x===1.5?'1.5':String(x))+'x';}
+function fmt(x){return String(x)+'x';}
 function paintSpeed(){
   document.querySelectorAll('.sp').forEach(function(b){b.setAttribute('aria-pressed',String(parseFloat(b.getAttribute('data-s'))===speed));});
   var f=$('#fsSpeed');if(f)f.textContent=fmt(speed);
 }
 function gm(){var e=window.EJS_emulator;return e&&e.gameManager?e.gameManager:null;}
 function applySpeed(quiet){
-  paintSpeed();
-  var m=gm();
+  paintSpeed();var m=gm();
   if(!m||typeof m.toggleFastForward!=='function'){if(!quiet&&started)ctlMsg('Speed control is not ready yet. Try again in a moment.');return false;}
   try{
     m.toggleFastForward(0);
@@ -265,43 +444,25 @@ function applySpeed(quiet){
     return true;
   }catch(e){if(!quiet)ctlMsg('This emulator version does not support speed control.');return false;}
 }
-function setSpeed(v){
-  speed=v;sset('pgm:speed',String(v));
-  if(!started){paintSpeed();ctlMsg('Speed '+fmt(v)+' will apply once the game starts.');return;}
-  applySpeed(false);
-}
-function keepAwake(){
-  try{if(navigator.wakeLock&&!wake){navigator.wakeLock.request('screen').then(function(l){wake=l;l.addEventListener('release',function(){wake=null;});}).catch(function(){});}}catch(e){}
-}
+function setSpeed(v){speed=v;sset('pgm:speed',String(v));if(!started){paintSpeed();ctlMsg('Speed '+fmt(v)+' will apply once the game starts.');return;}applySpeed(false);}
+function keepAwake(){try{if(navigator.wakeLock&&!wake){navigator.wakeLock.request('screen').then(function(l){wake=l;l.addEventListener('release',function(){wake=null;});}).catch(function(){});}}catch(e){}}
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&started)keepAwake();});
 function isFs(){return document.fullscreenElement||document.webkitFullscreenElement;}
 function enterFs(){
-  var el=document.querySelector('.stage');
-  var req=el.requestFullscreen||el.webkitRequestFullscreen;
-  if(!req){ctlMsg('Fullscreen is not supported in this browser. Rotate your phone manually.');return;}
+  var el=document.querySelector('.stage'),req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!req){ctlMsg('Fullscreen is not supported in this browser. Turn your phone sideways.');return;}
   var p;try{p=req.call(el);}catch(e){p=Promise.reject(e);}
   Promise.resolve(p).then(function(){
-    try{
-      if(screen.orientation&&screen.orientation.lock){
-        screen.orientation.lock('landscape').catch(function(){ctlMsg('Fullscreen is on. Auto rotate is not allowed here, so turn your phone sideways.');});
-      }else ctlMsg('Fullscreen is on. Turn your phone sideways.');
-    }catch(e){ctlMsg('Fullscreen is on. Turn your phone sideways.');}
-  }).catch(function(){ctlMsg('Fullscreen was blocked. Try the Fullscreen option in the game menu.');});
+    try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('landscape').catch(function(){ctlMsg('Fullscreen is on. Auto rotate is not allowed here, so turn your phone sideways.');});}
+    else ctlMsg('Fullscreen is on. Turn your phone sideways.');}catch(e){ctlMsg('Fullscreen is on. Turn your phone sideways.');}
+  }).catch(function(){ctlMsg('Fullscreen was blocked. Try Enter Fullscreen in the game menu.');});
 }
-function exitFs(){
-  try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}
-  try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}
-}
-function onFsChange(){
-  if(!isFs()){try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}}
-  var b=$('#fsBtn');if(b)b.textContent=isFs()?'Exit fullscreen':'Fullscreen + Rotate';
-}
+function unlockRot(){try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}}
+function exitFs(){unlockRot();try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
+function onFsChange(){if(!isFs())unlockRot();var b=$('#fsBtn');if(b)b.textContent=isFs()?'Exit fullscreen':'Fullscreen + Rotate';}
 function setupControls(){
   var box=$('#speed');
-  SPEEDS.forEach(function(v){
-    var b=document.createElement('button');b.type='button';b.className='sp';b.setAttribute('data-s',String(v));b.textContent=fmt(v);
-    b.addEventListener('click',function(){setSpeed(v);});box.appendChild(b);
-  });
+  SPEEDS.forEach(function(v){var b=h('button',{type:'button','class':'sp','data-s':String(v),text:fmt(v)});b.addEventListener('click',function(){setSpeed(v);});box.appendChild(b);});
   paintSpeed();
   $('#fsBtn').addEventListener('click',function(){if(isFs())exitFs();else enterFs();});
   $('#fsExit').addEventListener('click',exitFs);
@@ -309,22 +470,22 @@ function setupControls(){
   document.addEventListener('fullscreenchange',onFsChange);
   document.addEventListener('webkitfullscreenchange',onFsChange);
   if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$('#fsBtn').hidden=true;
+  $('.stage').addEventListener('contextmenu',function(e){e.preventDefault();});
 }
-
-/* ----- player (EmulatorJS) ----- */
 function openPlayer(){
-  var g=GAMES.filter(function(x){return x.id===playId;})[0];
-  if(!g){$('#home').hidden=false;$('#searchBox').hidden=true;showMsg('Game not found.');return;}
-  document.title=g.title+' | PokiGbaMon';
+  var g=DATA.games.filter(function(x){return x.id===playId;})[0];
+  if(!g){$('#home').hidden=false;$('#searchBox').hidden=true;$('#count').textContent='';showMsg('Game not found.');return;}
+  document.title=g.title+' | '+(DATA.site.title||'PokiGbaMon');
   $('#playerPage').hidden=false;$('#searchBox').hidden=true;
   $('#pTitle').textContent=g.title;
+  if(g.howto){var hw=$('#howto');hw.hidden=false;hw.textContent='';hw.appendChild(h('b',{text:'This game: '}));hw.appendChild(document.createTextNode(g.howto));}
   window.EJS_player='#game';
   window.EJS_core='gba';
   window.EJS_gameUrl=g.file;
-  window.EJS_gameName=g.id;          /* saves are stored in the browser under this name */
+  window.EJS_gameName=g.id;
   window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
   window.EJS_color='#6a5fc4';
-  window.EJS_startOnLoaded=false;    /* the player taps once to start, which phones require */
+  window.EJS_startOnLoaded=false;
   window.EJS_language='en-US';
   window.EJS_onGameStart=function(){started=true;applySpeed(true);keepAwake();};
   setupControls();
@@ -333,6 +494,202 @@ function openPlayer(){
   s.onerror=function(){$('#game').innerHTML='<p style="color:#fff;padding:20px">The emulator could not load. Check your internet and refresh.</p>';};
   document.body.appendChild(s);
 }
+
+/* ============ creator: login ============ */
+var AUTH_KEY='pgm:auth',failN=0,lockUntil=0;
+function sha(str){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function loggedIn(){var t=parseInt(sget(AUTH_KEY)||'0',10);return t>Date.now();}
+function openCreator(){
+  $('#creator').hidden=false;$('#searchBox').hidden=true;$('#creatorLink').hidden=true;
+  document.title='Creator | '+DEFAULT_SITE.title;
+  if(loggedIn())showPanel();else showLogin();
+}
+function showLogin(){
+  $('#panel').hidden=true;$('#loginBox').hidden=false;
+  $('#loginForm').onsubmit=function(e){
+    e.preventDefault();var err=$('#lerr');err.textContent='';
+    if(Date.now()<lockUntil){err.textContent='Too many tries. Wait a little and try again.';return;}
+    if(!(window.crypto&&crypto.subtle)){err.textContent='This page must be opened over https to log in.';return;}
+    var u=$('#lu').value.trim().toLowerCase(),p=$('#lp').value;
+    sha('pgm1|'+u+'|'+p).then(function(x){
+      if(x===CRED_HASH){failN=0;sset(AUTH_KEY,String(Date.now()+8*3600*1000));$('#lp').value='';showPanel();}
+      else{failN++;err.textContent='Wrong username or password.';if(failN>=5){lockUntil=Date.now()+60000;failN=0;err.textContent='Too many tries. Wait 1 minute.';}}
+    });
+  };
+}
+function logout(){sdel(AUTH_KEY);location.href='?creator';}
+
+/* ============ creator: GitHub ============ */
+function gitCfg(){
+  var c={owner:'',repo:'',branch:'main',token:''};
+  try{var s=JSON.parse(sget('pgm:git')||'{}');Object.assign(c,s);}catch(e){}
+  if(!c.owner&&/\.github\.io$/i.test(location.hostname)){c.owner=location.hostname.split('.')[0];var seg=location.pathname.split('/')[1];if(seg&&seg.indexOf('.')<0)c.repo=c.repo||seg;}
+  return c;
+}
+function gitHeaders(c,json){var o={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Authorization':'Bearer '+c.token};if(json)o['Content-Type']='application/json';return o;}
+function gitUrl(c,path){return 'https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+path;}
+function gitNeed(){var c=gitCfg();return (!c.owner||!c.repo||!c.token)?null:c;}
+function b64ToText(b){var bin=atob(b.replace(/\s/g,'')),bytes=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder().decode(bytes);}
+function textToB64(t){var bytes=new TextEncoder().encode(t),s='';for(var i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s);}
+function bufToB64(buf){var bytes=new Uint8Array(buf),s='';for(var i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s);}
+function gitErr(status){
+  if(status===401)return 'GitHub did not accept the token. It may be wrong or expired.';
+  if(status===403||status===404)return 'The token cannot reach this repository. Check the name, and give the token Contents: Read and write.';
+  if(status===409||status===422)return 'GitHub says the file changed meanwhile. Press Publish once more.';
+  return 'GitHub error '+status+'. Try again.';
+}
+function gitGet(c,path){
+  return fetch(gitUrl(c,'/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(c.branch)+'&t='+Date.now()),{headers:gitHeaders(c)}).then(function(r){
+    if(r.status===404)return null;if(!r.ok)throw {status:r.status};return r.json();
+  });
+}
+function gitPut(c,path,b64,msg){
+  return gitGet(c,path).then(function(ex){
+    var body={message:msg,content:b64,branch:c.branch};if(ex&&ex.sha)body.sha=ex.sha;
+    return fetch(gitUrl(c,'/contents/'+path.split('/').map(encodeURIComponent).join('/')),{method:'PUT',headers:gitHeaders(c,true),body:JSON.stringify(body)});
+  }).then(function(r){if(!r.ok)throw {status:r.status};return r.json();});
+}
+
+/* ============ creator: panel ============ */
+var draft=null,baseStr='',editIdx=-2;
+function snap(d){return JSON.stringify({site:d.site,games:d.games});}
+function dirty(){return draft&&snap(draft)!==baseStr;}
+function saveDraft(){if(dirty())sset('pgm:draft',snap(draft));else sdel('pgm:draft');updatePub();}
+function updatePub(){
+  var d=dirty(),btn=$('#pubBtn'),t=$('#pubTxt');
+  btn.disabled=!d;t.textContent=d?'Unpublished changes':'No changes';
+  t.style.color=d?'var(--heart)':'var(--muted)';
+}
+function showPanel(){
+  $('#loginBox').hidden=true;$('#panel').hidden=false;
+  $('#logout').onclick=logout;
+  loadAdminData().then(function(){wirePanel();renderList();renderSite();renderGit();updatePub();});
+}
+function loadAdminData(){
+  var c=gitNeed();
+  var pub=c?gitGet(c,'games.json').then(function(f){return f?JSON.parse(b64ToText(f.content)):null;}).catch(function(){return null;}):Promise.resolve(null);
+  return pub.then(function(d){
+    if(d)return d;
+    return fetch('games.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};});
+  }).then(function(d){
+    var base=normalize(d);baseStr=snap(base);draft=base;
+    var saved=sget('pgm:draft');
+    if(saved){try{var sd=normalize(JSON.parse(saved));draft=sd;}catch(e){}}
+  });
+}
+var wired=false;
+function wirePanel(){
+  if(wired)return;wired=true;
+  $('#ctabs').addEventListener('click',function(e){
+    var b=e.target.closest('[data-t]');if(!b)return;
+    ['games','site','git'].forEach(function(t){$('#t'+t.charAt(0).toUpperCase()+t.slice(1)).hidden=(t!==b.getAttribute('data-t'));});
+    $('#ctabs').querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
+  });
+  $('#addGame').onclick=function(){openEditor(-1);};
+  $('#editor').onsubmit=function(e){e.preventDefault();saveEditor();};
+  $('#eCancel').onclick=closeEditor;
+  $('#eTitle').addEventListener('input',function(){if(editIdx===-1&&!$('#eId').dataset.touched)$('#eId').value=slug($('#eTitle').value);});
+  $('#eId').addEventListener('input',function(){$('#eId').dataset.touched='1';});
+  $('#eCover').addEventListener('input',previewCover);
+  $('#upBtn').onclick=uploadRom;
+  var delArmed=false;
+  $('#eDel').onclick=function(){
+    if(!delArmed){delArmed=true;$('#eDel').textContent='Tap again to delete';setTimeout(function(){delArmed=false;$('#eDel').textContent='Delete';},4000);return;}
+    draft.games.splice(editIdx,1);saveDraft();closeEditor();renderList();
+  };
+  ['sTitle','sTag','sNotice'].forEach(function(id){$('#'+id).addEventListener('input',function(){
+    draft.site.title=$('#sTitle').value;draft.site.tagline=$('#sTag').value;draft.site.notice=$('#sNotice').value;saveDraft();});});
+  $('#gSave').onclick=function(){
+    var c={owner:$('#gOwner').value.trim(),repo:$('#gRepo').value.trim(),branch:$('#gBranch').value.trim()||'main',token:$('#gToken').value.trim()};
+    sset('pgm:git',JSON.stringify(c));gMsg('Saved on this phone.',true);
+  };
+  $('#gClear').onclick=function(){var c=gitCfg();c.token='';sset('pgm:git',JSON.stringify(c));$('#gToken').value='';gMsg('Token removed from this phone.',true);};
+  $('#gTest').onclick=function(){
+    $('#gSave').click();var c=gitNeed();if(!c){gMsg('Fill username, repository and token first.');return;}
+    gMsg('Checking...',true);
+    fetch(gitUrl(c,''),{headers:gitHeaders(c)}).then(function(r){if(!r.ok)throw {status:r.status};return r.json();}).then(function(j){
+      if(j.permissions&&!j.permissions.push)gMsg('Connected, but this token can only read. Give it Contents: Read and write.');
+      else gMsg('Connected to '+j.full_name+'. You can publish.',true);
+    }).catch(function(e){gMsg(gitErr(e&&e.status));});
+  };
+  $('#pubBtn').onclick=publish;
+}
+function gMsg(t,ok){var m=$('#gMsg');m.textContent=t;m.className='err'+(ok?' ok':'');}
+function renderGit(){var c=gitCfg();$('#gOwner').value=c.owner;$('#gRepo').value=c.repo;$('#gBranch').value=c.branch;$('#gToken').value=c.token;}
+function renderSite(){$('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;}
+function renderList(){
+  var box=$('#glist');box.innerHTML='';
+  if(!draft.games.length){box.appendChild(h('p',{'class':'hint',text:'No games yet. Tap Add game to create the first one.'}));}
+  draft.games.forEach(function(g,i){
+    var th=h('div',{},[coverNode(g,true)]);
+    var t=h('div',{'class':'t'},[h('b',{text:g.title}),h('span',{text:g.genre+' | '+g.file}),g.hidden?h('span',{'class':'pill',text:'Hidden'}):null,g.badge?h('span',{'class':'pill',text:g.badge}):null]);
+    var act=h('div',{'class':'act'});
+    function mk(txt,fn,dis,label){var b=h('button',{type:'button','class':'btn sm',text:txt,'aria-label':label||txt});b.disabled=!!dis;b.onclick=fn;act.appendChild(b);}
+    mk('Edit',function(){openEditor(i);});
+    mk('↑',function(){var x=draft.games.splice(i,1)[0];draft.games.splice(i-1,0,x);saveDraft();renderList();},i===0,'Move up');
+    mk('↓',function(){var x=draft.games.splice(i,1)[0];draft.games.splice(i+1,0,x);saveDraft();renderList();},i===draft.games.length-1,'Move down');
+    mk(g.hidden?'Show':'Hide',function(){g.hidden=!g.hidden;saveDraft();renderList();});
+    box.appendChild(h('div',{'class':'grow'},[th,t,act]));
+  });
+  var gl=$('#genres');gl.innerHTML='';var seen={};
+  draft.games.forEach(function(g){if(!seen[g.genre]){seen[g.genre]=1;gl.appendChild(h('option',{value:g.genre}));}});
+}
+function previewCover(){
+  var p=$('#cvPrev'),u=$('#eCover').value.trim(),m=$('#cvMsg');
+  p.innerHTML='';
+  var fake={id:$('#eId').value||'x',title:$('#eTitle').value||'Game',cover:u};
+  if(/^https?:\/\/ibb\.co\//i.test(u)){m.textContent='That is the ImgBB page link. Open the image and copy the Direct link that starts with https://i.ibb.co/';m.style.color='var(--danger)';}
+  else{m.textContent='On ImgBB use the Direct link (starts with https://i.ibb.co/).';m.style.color='';}
+  p.appendChild(coverNode(fake,false));
+}
+function openEditor(i){
+  editIdx=i;var g=i>=0?draft.games[i]:{id:'',title:'',genre:'',description:'',file:'',cover:'',badge:'',howto:'',hidden:false};
+  $('#eHead').textContent=i>=0?'Edit game':'Add game';
+  $('#eTitle').value=g.title;$('#eId').value=g.id;$('#eId').dataset.touched=i>=0?'1':'';
+  $('#eId').readOnly=i>=0;$('#eIdHint').textContent=i>=0?'The ID cannot be changed, because saves are stored under it.':'Small letters and numbers only. Do not change this later, or players lose their saves.';
+  $('#eGenre').value=g.genre;$('#eDesc').value=g.description;$('#eFile').value=g.file;$('#eCover').value=g.cover;
+  $('#eBadge').value=g.badge;$('#eHowto').value=g.howto;$('#eHidden').checked=g.hidden;
+  $('#eErr').textContent='';$('#upMsg').textContent='Needs the GitHub token. You can also upload on github.com.';$('#eUp').value='';
+  $('#eDel').hidden=i<0;$('#eDel').textContent='Delete';
+  $('#listSec').hidden=true;$('#editor').hidden=false;previewCover();
+  window.scrollTo(0,0);$('#eTitle').focus({preventScroll:true});
+}
+function closeEditor(){editIdx=-2;$('#editor').hidden=true;$('#listSec').hidden=false;window.scrollTo(0,0);}
+function saveEditor(){
+  var err=$('#eErr');err.textContent='';
+  var g={title:$('#eTitle').value.trim(),id:$('#eId').value.trim().toLowerCase(),genre:$('#eGenre').value.trim()||'Game',description:$('#eDesc').value.trim(),
+    file:$('#eFile').value.trim().replace(/^\/+/,''),cover:$('#eCover').value.trim(),badge:$('#eBadge').value,howto:$('#eHowto').value.trim(),hidden:$('#eHidden').checked};
+  if(!g.title){err.textContent='Add a game title.';return;}
+  if(!/^[a-z0-9][a-z0-9-]*$/.test(g.id)){err.textContent='Game ID: use small letters, numbers and dashes only.';return;}
+  if(!g.file||!/^[a-z0-9_\-\.\/ ]+$/i.test(g.file)||g.file.indexOf('..')>=0){err.textContent='Add the game file name, like roms/pokfd.zip.';return;}
+  if(g.cover&&!safeUrl(g.cover)){err.textContent='The cover link must start with https://';return;}
+  var dup=draft.games.some(function(x,k){return x.id===g.id&&k!==editIdx;});
+  if(dup){err.textContent='Another game already uses this ID.';return;}
+  if(editIdx>=0)draft.games[editIdx]=g;else draft.games.unshift(g);
+  saveDraft();closeEditor();renderList();
+}
+function uploadRom(){
+  var f=$('#eUp').files&&$('#eUp').files[0],m=$('#upMsg');
+  if(!f){m.textContent='Choose a .gba or .zip file first.';return;}
+  var c=gitNeed();if(!c){m.textContent='Add your GitHub token in the GitHub tab first.';return;}
+  var name=f.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-'),path='roms/'+name;
+  if(!/\.(gba|zip)$/.test(name)){m.textContent='Only .gba or .zip files.';return;}
+  var btn=$('#upBtn');btn.disabled=true;m.textContent='Uploading '+(f.size/1048576).toFixed(1)+' MB. Keep this page open...';
+  f.arrayBuffer().then(function(buf){return gitPut(c,path,bufToB64(buf),'Add game file '+name);}).then(function(){
+    $('#eFile').value=path;m.textContent='Uploaded as '+path+'. Save the game, then Publish.';m.style.color='var(--ok)';
+  }).catch(function(e){m.style.color='var(--danger)';m.textContent=e&&e.status?gitErr(e.status):'Upload failed. Check your internet and try again.';}).then(function(){btn.disabled=false;});
+}
+function publish(){
+  var c=gitNeed(),btn=$('#pubBtn'),t=$('#pubTxt');
+  if(!c){t.textContent='Add your GitHub token in the GitHub tab.';t.style.color='var(--danger)';return;}
+  btn.disabled=true;t.style.color='';t.textContent='Publishing...';
+  var out={site:draft.site,games:draft.games};
+  gitPut(c,'games.json',textToB64(JSON.stringify(out,null,2)+'\n'),'Update games from creator panel').then(function(){
+    baseStr=snap(draft);sdel('pgm:draft');updatePub();t.textContent='Published. Live in 1 to 2 minutes.';t.style.color='var(--ok)';
+  }).catch(function(e){btn.disabled=false;t.style.color='var(--danger)';t.textContent=e&&e.status?gitErr(e.status):'Could not publish. Check your internet.';});
+}
+
+boot();
 })();
 </script>
 </body>
