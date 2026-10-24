@@ -152,7 +152,14 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .mx{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;border-radius:50%}
 .mx:hover{background:var(--chip)}
 .mbox .hint{margin:12px 0 0}
-.cloudrow{max-width:760px;margin:12px auto 0;display:flex;gap:8px;flex-wrap:wrap}
+.cloudrow{display:flex;gap:8px;flex-wrap:wrap}
+.slotbox{max-width:760px;margin:14px auto 0}
+.slotlbl{font:700 12px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.slotgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.slotbtn{min-height:58px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;display:grid;gap:2px;align-content:center;text-align:left;cursor:pointer}
+.slotbtn b{font-size:15px}
+.slotbtn small{font-size:12px;color:var(--muted)}
+.slotbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--chip);box-shadow:inset 0 0 0 1px var(--accent)}
 .cloudmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
 .rules{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
 </style>
@@ -169,6 +176,14 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
     <button type="button" class="btn sm" id="authBtn" hidden>Log in</button>
   </div>
 </header>
+
+<div class="modal" id="cfModal" role="alertdialog" aria-modal="true" aria-labelledby="cfT" aria-describedby="cfMsg" hidden style="z-index:3100">
+  <div class="mbox">
+    <h2 id="cfT">Are you sure?</h2>
+    <p id="cfMsg" style="margin:0 0 18px"></p>
+    <div class="btnrow"><button type="button" class="btn" id="cfNo">Cancel</button><button type="button" class="btn danger" id="cfOk">OK</button></div>
+  </div>
+</div>
 
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="amT" hidden>
   <div class="mbox">
@@ -232,16 +247,20 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <button type="button" class="btn primary" id="fsBtn">Fullscreen + Rotate</button>
     </div>
     <div class="ctlmsg" id="ctlmsg" role="status" aria-live="polite"></div>
-    <div class="cloudrow" id="cloudRow" hidden>
-      <button type="button" class="btn sm" id="csSave">Save state online</button>
-      <button type="button" class="btn sm" id="csLoad">Load online state</button>
-      <button type="button" class="btn sm primary" id="csLogin" hidden>Log in to save progress</button>
+    <div class="slotbox" id="slotBox" hidden>
+      <div class="slotlbl">Online save slots</div>
+      <div class="slotgrid" id="slotGrid" role="group" aria-label="Save slots"></div>
+      <div class="cloudrow" id="slotBtns">
+        <button type="button" class="btn primary" id="csSave">Save to slot</button>
+        <button type="button" class="btn" id="csLoad">Load slot</button>
+      </div>
+      <button type="button" class="btn primary" id="csLogin" hidden>Log in to save progress</button>
     </div>
     <div class="cloudmsg" id="cloudMsg" role="status" aria-live="polite"></div>
     <div class="tips">
       <div id="howto" hidden></div>
       <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
-      <div><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
+      <div id="tipSave"><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
       <div><b>Backup:</b> menu, then Export Save File, to download your save and keep it safe.</div>
     </div>
   </div>
@@ -566,22 +585,32 @@ var CLOUD={on:false,auth:null,db:null,user:null,ready:Promise.resolve(false)};
 var syncOn=false,lastSavHash=null,upBusy=false,upQueued=null,pollT=null;
 function cloudConfigured(){var c=DATA.site&&DATA.site.firebase;return !!(c&&c.apiKey&&c.projectId&&c.appId);}
 function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('load failed'));};document.head.appendChild(s);});}
+function loadAll(urls){
+  /* download in parallel, run in order */
+  return Promise.all(urls.map(function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=false;s.onload=res;s.onerror=function(){rej(new Error('load failed'));};document.head.appendChild(s);});}));
+}
+function storageOk(){try{localStorage.setItem('pgm:t','1');localStorage.removeItem('pgm:t');return true;}catch(e){return false;}}
 function initCloud(){
   if(!cloudConfigured())return;
   var base='https://www.gstatic.com/firebasejs/'+FB_VER+'/firebase-';
-  CLOUD.ready=loadScript(base+'app-compat.js').then(function(){return loadScript(base+'auth-compat.js');}).then(function(){return loadScript(base+'firestore-compat.js');}).then(function(){
+  if(!storageOk())CLOUD.noPersist=true;
+  var b=$('#authBtn');b.textContent=sget('pgm:who')||'Log in';b.hidden=false;   /* show the saved name at once, no "Log in" flash */
+  CLOUD.ready=loadAll([base+'app-compat.js',base+'auth-compat.js',base+'firestore-compat.js']).then(function(){
     firebase.initializeApp(DATA.site.firebase);CLOUD.auth=firebase.auth();CLOUD.db=firebase.firestore();CLOUD.on=true;
-    return new Promise(function(res){var first=true;CLOUD.auth.onAuthStateChanged(function(u){CLOUD.user=u;paintAuth();if(first){first=false;res(true);}});});
+    try{var Pz=firebase.auth.Auth&&firebase.auth.Auth.Persistence;if(Pz&&CLOUD.auth.setPersistence)CLOUD.auth.setPersistence(Pz.LOCAL).catch(function(){CLOUD.noPersist=true;});}catch(e){}
+    return new Promise(function(res){var first=true;CLOUD.auth.onAuthStateChanged(function(u){
+      CLOUD.user=u;if(u)sset('pgm:who',userName());else sdel('pgm:who');
+      paintAuth();if(first){first=false;res(true);}});});
   }).catch(function(){CLOUD.on=false;paintAuth();return false;});
-  $('#authBtn').hidden=false;
 }
 function userName(){return CLOUD.user&&CLOUD.user.email?CLOUD.user.email.split('@')[0]:'';}
 function paintAuth(){
-  var b=$('#authBtn');if(b)b.textContent=CLOUD.user?userName():'Log in';
-  var row=$('#cloudRow');if(!row||!playId)return;
-  row.hidden=!cloudConfigured();
-  $('#csSave').hidden=!CLOUD.user;$('#csLoad').hidden=!CLOUD.user;$('#csLogin').hidden=!!CLOUD.user;
+  var b=$('#authBtn');if(b)b.textContent=CLOUD.user?userName():(CLOUD.on?'Log in':(sget('pgm:who')||'Log in'));
+  var box=$('#slotBox');if(!box||!playId)return;
+  box.hidden=!cloudConfigured();
+  $('#slotGrid').hidden=!CLOUD.user;$('#slotBtns').hidden=!CLOUD.user;$('#csLogin').hidden=!!CLOUD.user;
   if(!CLOUD.user&&CLOUD.on)cloudMsg('You are not logged in, so your progress will not be saved. Log in to save online.');
+  if(CLOUD.user&&CLOUD.db)loadSlotMeta();
 }
 function cloudMsg(t){var m=$('#cloudMsg');if(m)m.textContent=t||'';}
 function clock(){try{return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
@@ -628,6 +657,7 @@ function paintAuthModal(){
   $('#amGo').textContent=s?'Create account':'Log in';
   $('#amSwitch').textContent=s?'I already have an account':'Create a new account';
   $('#ap').setAttribute('autocomplete',s?'new-password':'current-password');
+  $('#amHint').textContent=CLOUD.noPersist?'Your browser is blocking saved logins (private mode or blocked site data). You will have to log in every time you open the site. Allow site data for this site to stay logged in.':'No email needed. Your game progress is saved online under your account. If you forget your password it cannot be recovered, so remember it.';
   $('#amErr').textContent='';
 }
 function submitAuth(){
@@ -705,25 +735,88 @@ function cloudStart(){
 }
 document.addEventListener('visibilitychange',function(){if(document.hidden)pollSav();});
 addEventListener('pagehide',pollSav);
+/* ----- 4 online slots: each slot keeps the in-game save (.sav) and the full game state ----- */
+var SLOTS=4,slotSel=1,slotMeta={};
+try{var ss=parseInt(sget('pgm:slot'),10);if(ss>=1&&ss<=SLOTS)slotSel=ss;}catch(e){}
+function fmtWhen(t){try{return new Date(t).toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return 'saved';}}
+function paintSlots(){
+  var g=$('#slotGrid');if(!g)return;g.innerHTML='';
+  for(var n=1;n<=SLOTS;n++){(function(n){
+    var t=slotMeta[n];
+    var b=h('button',{type:'button','class':'slotbtn','aria-pressed':String(n===slotSel)},[h('b',{text:'Slot '+n}),h('small',{text:t?fmtWhen(t):'Empty'})]);
+    b.addEventListener('click',function(){slotSel=n;sset('pgm:slot',String(n));paintSlots();});
+    g.appendChild(b);
+  })(n);}
+  $('#csLoad').disabled=!slotMeta[slotSel];
+}
+function loadSlotMeta(){
+  if(!CLOUD.user||!playId)return Promise.resolve();
+  return savesRef().doc(playId+'_meta').get().then(function(s){
+    slotMeta={};
+    if(s.exists){try{var o=JSON.parse(s.data().d);for(var k in o)slotMeta[k]=o[k];}catch(e){}}
+    paintSlots();
+  }).catch(function(){paintSlots();});
+}
+function writeMeta(){return savesRef().doc(playId+'_meta').set({d:JSON.stringify(slotMeta),t:Date.now(),n:0});}
+function askConfirm(title,msg,okText){
+  return new Promise(function(res){
+    var m=$('#cfModal');$('#cfT').textContent=title;$('#cfMsg').textContent=msg;$('#cfOk').textContent=okText||'OK';m.hidden=false;
+    function done(v){m.hidden=true;$('#cfOk').onclick=null;$('#cfNo').onclick=null;m.onclick=null;document.removeEventListener('keydown',key);res(v);}
+    function key(e){if(e.key==='Escape')done(false);}
+    document.addEventListener('keydown',key);
+    $('#cfOk').onclick=function(){done(true);};
+    $('#cfNo').onclick=function(){done(false);};
+    m.onclick=function(e){if(e.target===m)done(false);};
+    $('#cfNo').focus();
+  });
+}
+function saveSlot(){
+  var n=slotSel;
+  if(!gm()||typeof gm().getState!=='function'){cloudMsg('Start the game first.');return;}
+  function go(){
+    var m=gm(),b=$('#csSave');b.disabled=true;
+    try{
+      var st=m.getState();if(!st||!st.length){cloudMsg('Could not read the game. Try again.');b.disabled=false;return;}
+      var sv=null;try{var raw=m.getSaveFile();if(raw&&raw.length){var u=new Uint8Array(raw);if(!isBlank(u))sv=u;}}catch(e){}
+      Promise.all([packBytes(new Uint8Array(st)),sv?packBytes(sv):Promise.resolve(null)]).then(function(r){
+        var s=JSON.stringify({v:1,state:r[0],sav:r[1]});
+        if(s.length>880000)throw new Error('too big');
+        return savesRef().doc(playId+'_slot'+n).set({d:s,t:Date.now(),n:s.length});
+      }).then(function(){slotMeta[n]=Date.now();paintSlots();return writeMeta();})
+      .then(function(){cloudMsg('Saved to Slot '+n+' at '+clock()+'.');})
+      .catch(function(e){cloudMsg('Could not save to Slot '+n+'. '+errText(e));})
+      .then(function(){b.disabled=false;});
+    }catch(e){cloudMsg('Could not read the game. Try again.');b.disabled=false;}
+  }
+  if(slotMeta[n])askConfirm('Replace Slot '+n+'?','Slot '+n+' already has a save from '+fmtWhen(slotMeta[n])+'. Saving now will overwrite it.','Replace').then(function(ok){if(ok)go();});
+  else go();
+}
+function loadSlot(){
+  var n=slotSel,t=slotMeta[n];
+  if(!t){cloudMsg('Slot '+n+' is empty.');return;}
+  if(!gm()||typeof gm().loadState!=='function'){cloudMsg('Start the game first.');return;}
+  askConfirm('Load Slot '+n+'?','Your current progress will be replaced by the save from '+fmtWhen(t)+'. Anything you played since your last save will be lost.','Load Slot '+n).then(function(ok){
+    if(!ok)return;
+    var b=$('#csLoad');b.disabled=true;
+    savesRef().doc(playId+'_slot'+n).get().then(function(s){
+      if(!s.exists)throw new Error('missing');
+      var o=JSON.parse(s.data().d);
+      return Promise.all([o.state?unpackB64(o.state):null,o.sav?unpackB64(o.sav):null]);
+    }).then(function(r){
+      var g=gm(),st=r[0],sv=r[1];
+      if(sv){g.FS.writeFile(g.getSaveFilePath(),sv);g.loadSaveFiles();lastSavHash=null;}
+      if(st)g.loadState(st);else if(typeof g.restart==='function')g.restart();
+      cloudMsg('Loaded Slot '+n+'.');
+    }).catch(function(e){cloudMsg('Could not load Slot '+n+'. '+errText(e));}).then(function(){b.disabled=!slotMeta[slotSel];});
+  });
+}
 function setupCloudUi(){
   if(!cloudConfigured())return;
+  var ts=$('#tipSave');if(ts){ts.textContent='';ts.appendChild(h('b',{text:'Save: '}));ts.appendChild(document.createTextNode('log in, then use the in-game save as usual. It goes online by itself. Use the 4 slots to keep extra copies.'));}
   $('#csLogin').addEventListener('click',openAuth);
-  $('#csSave').addEventListener('click',function(){
-    var m=gm();if(!m||typeof m.getState!=='function'){cloudMsg('Start the game first.');return;}
-    var b=$('#csSave');b.disabled=true;
-    try{
-      var st=m.getState();if(!st||!st.length){cloudMsg('Could not read the game state.');b.disabled=false;return;}
-      cloudPut('state',new Uint8Array(st)).then(function(){cloudMsg('Game state saved online at '+clock()+'.');}).catch(function(e){cloudMsg('Could not save state. '+errText(e));}).then(function(){b.disabled=false;});
-    }catch(e){cloudMsg('Could not read the game state.');b.disabled=false;}
-  });
-  $('#csLoad').addEventListener('click',function(){
-    var m=gm();if(!m||typeof m.loadState!=='function'){cloudMsg('Start the game first.');return;}
-    var b=$('#csLoad');b.disabled=true;
-    cloudGet('state').then(function(r){
-      if(!r){cloudMsg('No online state yet. Save one first.');return;}
-      gm().loadState(r.bytes);cloudMsg('Loaded your online state.');
-    }).catch(function(e){cloudMsg('Could not load state. '+errText(e));}).then(function(){b.disabled=false;});
-  });
+  $('#csSave').addEventListener('click',saveSlot);
+  $('#csLoad').addEventListener('click',loadSlot);
+  paintSlots();
 }
 
 /* ============ creator: login ============ */
