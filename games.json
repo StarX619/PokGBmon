@@ -2,7 +2,15 @@
   "site": {
     "title": "PokiGbaMon",
     "tagline": "Pick a game. Press play.",
-    "notice": ""
+    "notice": "",
+    "firebase": {
+      "apiKey": "AIzaSyAW15EzEiOAYW1cYdkoQM0v0sA7Wl9qtIY",
+      "authDomain": "pokigbamon.firebaseapp.com",
+      "projectId": "pokigbamon",
+      "storageBucket": "pokigbamon.firebasestorage.app",
+      "messagingSenderId": "1082467402434",
+      "appId": "1:1082467402434:web:616f44034664edf3b3715b"
+    }
   },
   "games": [
     {
