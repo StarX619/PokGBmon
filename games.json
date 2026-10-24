@@ -1,18 +1,31 @@
 {
+  "site": {
+    "title": "PokiGbaMon",
+    "tagline": "Pick a game. Press play.",
+    "notice": ""
+  },
   "games": [
     {
-  "id": "pokfd",
-  "title": "Game ka naam jo players ko dikhana hai",
-  "genre": "Adventure",
-  "description": "Ek line ka description",
-  "file": "pokfd.zip"
+      "title": "FIRE RED",
+      "id": "pokfd",
+      "genre": "Adventure",
+      "description": "Ek line ka description",
+      "file": "pokfd.zip",
+      "cover": "https://i.ibb.co/qFgXRbhd/images-1.jpg",
+      "badge": "Hot",
+      "howto": "",
+      "hidden": false
     },
     {
       "id": "mygame2",
       "title": "My Game 2",
       "genre": "Action",
       "description": "Doosre game ki description.",
-      "file": "mygame2.gba"
+      "file": "mygame2.gba",
+      "cover": "",
+      "badge": "",
+      "howto": "",
+      "hidden": false
     }
   ]
 }
