@@ -143,6 +143,18 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .pubbar span{font-size:14px;min-width:0}
 .steps{margin:0 0 12px;padding-left:20px;font-size:14px;color:var(--muted)}
 .steps li{margin-bottom:4px}
+
+/* accounts + cloud */
+.bar .btn.sm{flex:none}
+.modal{position:fixed;inset:0;z-index:3000;background:rgba(10,8,30,.6);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-left));overflow-y:auto}
+.mbox{position:relative;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px 20px}
+.mbox h2{font-size:24px;margin-bottom:14px;padding-right:44px}
+.mx{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;border-radius:50%}
+.mx:hover{background:var(--chip)}
+.mbox .hint{margin:12px 0 0}
+.cloudrow{max-width:760px;margin:12px auto 0;display:flex;gap:8px;flex-wrap:wrap}
+.cloudmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
+.rules{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -154,8 +166,30 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <label for="q" style="position:absolute;left:-9999px">Search games</label>
       <input id="q" type="search" placeholder="Search games" autocomplete="off" enterkeyhint="search">
     </div>
+    <button type="button" class="btn sm" id="authBtn" hidden>Log in</button>
   </div>
 </header>
+
+<div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="amT" hidden>
+  <div class="mbox">
+    <button type="button" class="mx" id="amClose" aria-label="Close">&times;</button>
+    <h2 id="amT">Log in</h2>
+    <form id="amForm">
+      <div class="field"><label for="au">Username</label><input id="au" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20"></div>
+      <div class="field"><label for="ap">Password</label><input id="ap" type="password" autocomplete="current-password" maxlength="64"></div>
+      <button class="btn primary" type="submit" id="amGo" style="width:100%">Log in</button>
+      <p class="err" id="amErr" role="alert"></p>
+      <button type="button" class="btn sm" id="amSwitch">Create a new account</button>
+      <p class="hint" id="amHint">No email needed. Your game progress is saved online under your account. If you forget your password it cannot be recovered, so remember it.</p>
+    </form>
+    <div id="amAcct" hidden>
+      <p>Logged in as <b id="amName"></b></p>
+      <p class="hint">Your game progress is saved online under this account.</p>
+      <div class="btnrow" style="margin-top:12px"><button type="button" class="btn" id="amOut">Log out</button><button type="button" class="btn danger" id="amDel">Delete account</button></div>
+      <p class="err" id="amErr2" role="alert"></p>
+    </div>
+  </div>
+</div>
 <div class="notice" id="notice" hidden></div>
 
 <main>
@@ -198,6 +232,12 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <button type="button" class="btn primary" id="fsBtn">Fullscreen + Rotate</button>
     </div>
     <div class="ctlmsg" id="ctlmsg" role="status" aria-live="polite"></div>
+    <div class="cloudrow" id="cloudRow" hidden>
+      <button type="button" class="btn sm" id="csSave">Save state online</button>
+      <button type="button" class="btn sm" id="csLoad">Load online state</button>
+      <button type="button" class="btn sm primary" id="csLogin" hidden>Log in to save progress</button>
+    </div>
+    <div class="cloudmsg" id="cloudMsg" role="status" aria-live="polite"></div>
     <div class="tips">
       <div id="howto" hidden></div>
       <div><b>Tap the screen to start.</b> Touch buttons show up on phones. On a computer use arrow keys, Z, X and Enter.</div>
@@ -224,6 +264,7 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
         <button type="button" class="chip" data-t="games" aria-pressed="true">Games</button>
         <button type="button" class="chip" data-t="site" aria-pressed="false">Site</button>
         <button type="button" class="chip" data-t="git" aria-pressed="false">GitHub</button>
+        <button type="button" class="chip" data-t="cloud" aria-pressed="false">Online saves</button>
       </div>
 
       <div id="tGames">
@@ -292,6 +333,21 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
         </div>
       </div>
 
+      <div id="tCloud" hidden>
+        <div class="sec">
+          <h2>Online saves</h2>
+          <p class="hint">Players create a username and password, and their game progress is saved online with Firebase. Do the Firebase setup, then paste its config here.</p>
+          <div class="field"><label for="fbCfg">Firebase config</label><textarea id="fbCfg" rows="8" spellcheck="false" autocapitalize="none" placeholder="Paste the firebaseConfig from Firebase here"></textarea><small id="fbMsg"></small></div>
+          <div class="btnrow"><button type="button" class="btn primary" id="fbApply">Apply config</button><button type="button" class="btn danger" id="fbOff">Turn off online saves</button></div>
+        </div>
+        <div class="sec">
+          <h2>Database rules</h2>
+          <p class="hint">In Firebase open Firestore Database, Rules. Replace everything with this text and press Publish. It lets each player reach only their own saves.</p>
+          <textarea class="rules" id="fbRules" rows="14" readonly></textarea>
+          <button type="button" class="btn sm" id="fbCopy">Copy rules</button>
+        </div>
+      </div>
+
       <div class="pubbar" id="pubbar">
         <span id="pubTxt">No changes</span>
         <button type="button" class="btn primary" id="pubBtn" disabled>Publish</button>
@@ -326,7 +382,9 @@ try{favs=JSON.parse(sget('pgm:fav')||'[]');if(!Array.isArray(favs))favs=[];}catc
 function normalize(d){
   d=d||{};var list=Array.isArray(d)?d:(d.games||[]);
   var site=Object.assign({},DEFAULT_SITE,(!Array.isArray(d)&&d.site)||{});
-  return {site:{title:String(site.title||''),tagline:String(site.tagline||''),notice:String(site.notice||'')},
+  var so={title:String(site.title||''),tagline:String(site.tagline||''),notice:String(site.notice||'')};
+  if(site.firebase&&typeof site.firebase==='object')so.firebase=site.firebase;
+  return {site:so,
     games:list.filter(function(g){return g&&g.id&&g.file;}).map(function(g){return {id:String(g.id),title:String(g.title||g.id),genre:String(g.genre||'Game'),description:String(g.description||''),file:String(g.file),cover:String(g.cover||''),badge:String(g.badge||''),howto:String(g.howto||''),hidden:!!g.hidden};})};
 }
 function applySite(){
@@ -341,6 +399,7 @@ function boot(){
   if(wantCreator){openCreator();return;}
   fetch('games.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
     DATA=normalize(d);applySite();
+    initCloud();setupAuth();
     playId?openPlayer():openHome();
   }).catch(function(){
     $('#home').hidden=false;$('#searchBox').hidden=true;$('#count').textContent='';
@@ -487,12 +546,184 @@ function openPlayer(){
   window.EJS_color='#6a5fc4';
   window.EJS_startOnLoaded=false;
   window.EJS_language='en-US';
-  window.EJS_onGameStart=function(){started=true;applySpeed(true);keepAwake();};
-  setupControls();
+  window.EJS_onGameStart=function(){started=true;applySpeed(true);keepAwake();cloudStart();};
+  if(cloudConfigured()){
+    /* with online saves the browser-only save slots are hidden, saves go online */
+    window.EJS_Buttons={saveState:false,loadState:false,quickSave:false,quickLoad:false};
+    window.EJS_fixedSaveInterval=15000;
+    window.EJS_onSaveUpdate=function(e){if(syncOn&&e&&e.save)uploadSav(new Uint8Array(e.save));};
+  }
+  setupControls();setupCloudUi();
   var s=document.createElement('script');
   s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
   s.onerror=function(){$('#game').innerHTML='<p style="color:#fff;padding:20px">The emulator could not load. Check your internet and refresh.</p>';};
   document.body.appendChild(s);
+}
+
+/* ============ player accounts + online saves (Firebase) ============ */
+var FB_VER='10.12.2',MAIL_DOMAIN='@pokigbamon.example';
+var CLOUD={on:false,auth:null,db:null,user:null,ready:Promise.resolve(false)};
+var syncOn=false,lastSavHash=null,upBusy=false,upQueued=null,pollT=null;
+function cloudConfigured(){var c=DATA.site&&DATA.site.firebase;return !!(c&&c.apiKey&&c.projectId&&c.appId);}
+function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('load failed'));};document.head.appendChild(s);});}
+function initCloud(){
+  if(!cloudConfigured())return;
+  var base='https://www.gstatic.com/firebasejs/'+FB_VER+'/firebase-';
+  CLOUD.ready=loadScript(base+'app-compat.js').then(function(){return loadScript(base+'auth-compat.js');}).then(function(){return loadScript(base+'firestore-compat.js');}).then(function(){
+    firebase.initializeApp(DATA.site.firebase);CLOUD.auth=firebase.auth();CLOUD.db=firebase.firestore();CLOUD.on=true;
+    return new Promise(function(res){var first=true;CLOUD.auth.onAuthStateChanged(function(u){CLOUD.user=u;paintAuth();if(first){first=false;res(true);}});});
+  }).catch(function(){CLOUD.on=false;paintAuth();return false;});
+  $('#authBtn').hidden=false;
+}
+function userName(){return CLOUD.user&&CLOUD.user.email?CLOUD.user.email.split('@')[0]:'';}
+function paintAuth(){
+  var b=$('#authBtn');if(b)b.textContent=CLOUD.user?userName():'Log in';
+  var row=$('#cloudRow');if(!row||!playId)return;
+  row.hidden=!cloudConfigured();
+  $('#csSave').hidden=!CLOUD.user;$('#csLoad').hidden=!CLOUD.user;$('#csLogin').hidden=!!CLOUD.user;
+  if(!CLOUD.user&&CLOUD.on)cloudMsg('You are not logged in, so your progress will not be saved. Log in to save online.');
+}
+function cloudMsg(t){var m=$('#cloudMsg');if(m)m.textContent=t||'';}
+function clock(){try{return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function authErr(e){
+  var c=e&&e.code||'';
+  if(c==='auth/email-already-in-use')return 'This username is taken. Try another one.';
+  if(c==='auth/weak-password')return 'Password must be at least 6 characters.';
+  if(c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'||c==='auth/invalid-login-credentials')return 'Wrong username or password.';
+  if(c==='auth/too-many-requests')return 'Too many tries. Wait a few minutes.';
+  if(c==='auth/network-request-failed')return 'No internet. Try again.';
+  if(c==='auth/operation-not-allowed')return 'Sign up is not turned on yet. The site owner must enable Email/Password in Firebase.';
+  return 'Something went wrong. Try again.';
+}
+function errText(e){var c=e&&e.code||'';if(c==='permission-denied')return 'Not allowed. The site owner must set the Firestore rules.';if(e&&e.message==='too big')return 'The save is too large for online storage.';return 'Check your internet.';}
+var amMode='login';
+function setupAuth(){
+  if(!cloudConfigured()||wantCreator)return;
+  $('#authBtn').addEventListener('click',openAuth);
+  $('#amClose').addEventListener('click',closeAuth);
+  $('#authModal').addEventListener('click',function(e){if(e.target===$('#authModal'))closeAuth();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAuth();});
+  $('#amSwitch').addEventListener('click',function(){amMode=amMode==='login'?'signup':'login';paintAuthModal();});
+  $('#amForm').addEventListener('submit',function(e){e.preventDefault();submitAuth();});
+  $('#amOut').addEventListener('click',function(){CLOUD.auth.signOut().then(function(){closeAuth();if(playId)location.reload();});});
+  var arm=false;
+  $('#amDel').addEventListener('click',function(){
+    if(!arm){arm=true;$('#amDel').textContent='Tap again to delete everything';setTimeout(function(){arm=false;$('#amDel').textContent='Delete account';},5000);return;}
+    deleteAccount();
+  });
+}
+function openAuth(){
+  amMode='login';paintAuthModal();$('#authModal').hidden=false;
+  if(!CLOUD.on){$('#amErr').textContent='Online login could not load. Check your internet and refresh the page.';$('#amGo').disabled=true;}
+  else $('#amGo').disabled=false;
+  setTimeout(function(){var f=CLOUD.user?$('#amClose'):$('#au');if(f)f.focus();},50);
+}
+function closeAuth(){$('#authModal').hidden=true;}
+function paintAuthModal(){
+  var li=!!CLOUD.user;
+  $('#amForm').hidden=li;$('#amAcct').hidden=!li;
+  if(li){$('#amT').textContent='Your account';$('#amName').textContent=userName();$('#amErr2').textContent='';return;}
+  var s=amMode==='signup';
+  $('#amT').textContent=s?'Create account':'Log in';
+  $('#amGo').textContent=s?'Create account':'Log in';
+  $('#amSwitch').textContent=s?'I already have an account':'Create a new account';
+  $('#ap').setAttribute('autocomplete',s?'new-password':'current-password');
+  $('#amErr').textContent='';
+}
+function submitAuth(){
+  var err=$('#amErr');err.textContent='';
+  var u=$('#au').value.trim().toLowerCase(),p=$('#ap').value;
+  if(!/^[a-z0-9_]{3,20}$/.test(u)){err.textContent='Username: 3 to 20 letters, numbers or underscore.';return;}
+  if(p.length<6){err.textContent='Password must be at least 6 characters.';return;}
+  var go=$('#amGo');go.disabled=true;
+  var email=u+MAIL_DOMAIN;
+  var job=amMode==='signup'?CLOUD.auth.createUserWithEmailAndPassword(email,p):CLOUD.auth.signInWithEmailAndPassword(email,p);
+  job.then(function(){$('#ap').value='';closeAuth();if(playId)location.reload();}).catch(function(e){err.textContent=authErr(e);}).then(function(){go.disabled=false;});
+}
+function deleteAccount(){
+  var u=CLOUD.user,m=$('#amErr2');if(!u)return;m.textContent='Deleting...';
+  CLOUD.db.collection('users').doc(u.uid).collection('saves').get().then(function(q){
+    var b=CLOUD.db.batch();q.forEach(function(d){b.delete(d.ref);});return b.commit();
+  }).then(function(){return u.delete();}).then(function(){closeAuth();if(playId)location.reload();})
+  .catch(function(e){m.textContent=(e&&e.code==='auth/requires-recent-login')?'For safety, log out, log in again, then delete.':'Could not delete. Try again.';});
+}
+
+/* ----- save data ----- */
+function fnv(u){var x=2166136261;for(var i=0;i<u.length;i++){x^=u[i];x=Math.imul(x,16777619);}return (x>>>0)+':'+u.length;}
+function isBlank(u){if(!u||!u.length)return true;var f=u[0];for(var i=1;i<u.length;i++)if(u[i]!==f)return false;return true;}
+function b64ToBytes(s){var bin=atob(s),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+function packBytes(u8){
+  var p;
+  if(typeof CompressionStream==='function'&&typeof Response==='function'){
+    p=new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer().then(function(ab){return 'z:'+bufToB64(ab);});
+  }else p=Promise.resolve('r:'+bufToB64(u8));
+  return p.then(function(s){if(s.length>880000)throw new Error('too big');return s;});
+}
+function unpackB64(s){
+  var tag=s.slice(0,2),u=b64ToBytes(s.slice(2));
+  if(tag==='z:'&&typeof DecompressionStream==='function')return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer().then(function(ab){return new Uint8Array(ab);});
+  return Promise.resolve(u);
+}
+function savesRef(){return CLOUD.db.collection('users').doc(CLOUD.user.uid).collection('saves');}
+function cloudPut(kind,u8){return packBytes(u8).then(function(b64){return savesRef().doc(playId+'_'+kind).set({d:b64,t:Date.now(),n:u8.length});});}
+function cloudGet(kind){
+  return savesRef().doc(playId+'_'+kind).get().then(function(s){
+    if(!s.exists)return null;var x=s.data();return unpackB64(x.d).then(function(b){return {bytes:b,t:x.t};});
+  });
+}
+function uploadSav(u8){
+  if(!CLOUD.user||!syncOn||isBlank(u8))return;
+  var hs=fnv(u8);if(hs===lastSavHash)return;
+  if(upBusy){upQueued=u8;return;}
+  upBusy=true;
+  cloudPut('sav',u8).then(function(){lastSavHash=hs;cloudMsg('Progress saved online at '+clock()+'.');}).catch(function(e){cloudMsg('Could not save online. '+errText(e));}).then(function(){upBusy=false;if(upQueued){var q=upQueued;upQueued=null;uploadSav(q);}});
+}
+function pollSav(){
+  var m=gm();if(!m||typeof m.getSaveFile!=='function'||!CLOUD.user||!syncOn)return;
+  try{var u=m.getSaveFile();if(u&&u.length)uploadSav(new Uint8Array(u));}catch(e){}
+}
+function waitGM(ms){
+  return new Promise(function(res){var t0=Date.now();(function tick(){var m=gm();if(m&&m.FS&&typeof m.getSaveFilePath==='function')return res(m);if(Date.now()-t0>ms)return res(null);setTimeout(tick,200);})();});
+}
+function cloudStart(){
+  if(!cloudConfigured())return;
+  CLOUD.ready.then(function(ok){
+    if(!ok||!CLOUD.user){syncOn=false;return;}
+    return waitGM(6000).then(function(m){
+      if(!m){cloudMsg('Online save is not ready. Your progress may not load.');return;}
+      return cloudGet('sav').then(function(r){
+        if(!r||isBlank(r.bytes)){cloudMsg('Online save is on. Your progress saves automatically.');return;}
+        return new Promise(function(res){setTimeout(res,500);}).then(function(){
+          var g=gm();g.FS.writeFile(g.getSaveFilePath(),r.bytes);g.loadSaveFiles();if(typeof g.restart==='function')g.restart();
+          lastSavHash=fnv(r.bytes);cloudMsg('Loaded your online progress.');
+        });
+      });
+    }).catch(function(e){cloudMsg('Could not load your online progress. '+errText(e));}).then(function(){
+      syncOn=true;if(!pollT)pollT=setInterval(pollSav,20000);
+    });
+  });
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden)pollSav();});
+addEventListener('pagehide',pollSav);
+function setupCloudUi(){
+  if(!cloudConfigured())return;
+  $('#csLogin').addEventListener('click',openAuth);
+  $('#csSave').addEventListener('click',function(){
+    var m=gm();if(!m||typeof m.getState!=='function'){cloudMsg('Start the game first.');return;}
+    var b=$('#csSave');b.disabled=true;
+    try{
+      var st=m.getState();if(!st||!st.length){cloudMsg('Could not read the game state.');b.disabled=false;return;}
+      cloudPut('state',new Uint8Array(st)).then(function(){cloudMsg('Game state saved online at '+clock()+'.');}).catch(function(e){cloudMsg('Could not save state. '+errText(e));}).then(function(){b.disabled=false;});
+    }catch(e){cloudMsg('Could not read the game state.');b.disabled=false;}
+  });
+  $('#csLoad').addEventListener('click',function(){
+    var m=gm();if(!m||typeof m.loadState!=='function'){cloudMsg('Start the game first.');return;}
+    var b=$('#csLoad');b.disabled=true;
+    cloudGet('state').then(function(r){
+      if(!r){cloudMsg('No online state yet. Save one first.');return;}
+      gm().loadState(r.bytes);cloudMsg('Loaded your online state.');
+    }).catch(function(e){cloudMsg('Could not load state. '+errText(e));}).then(function(){b.disabled=false;});
+  });
 }
 
 /* ============ creator: login ============ */
@@ -582,7 +813,7 @@ function wirePanel(){
   if(wired)return;wired=true;
   $('#ctabs').addEventListener('click',function(e){
     var b=e.target.closest('[data-t]');if(!b)return;
-    ['games','site','git'].forEach(function(t){$('#t'+t.charAt(0).toUpperCase()+t.slice(1)).hidden=(t!==b.getAttribute('data-t'));});
+    ['games','site','git','cloud'].forEach(function(t){$('#t'+t.charAt(0).toUpperCase()+t.slice(1)).hidden=(t!==b.getAttribute('data-t'));});
     $('#ctabs').querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
   });
   $('#addGame').onclick=function(){openEditor(-1);};
@@ -613,10 +844,34 @@ function wirePanel(){
     }).catch(function(e){gMsg(gitErr(e&&e.status));});
   };
   $('#pubBtn').onclick=publish;
+  $('#fbRules').value=FB_RULES;
+  $('#fbCopy').onclick=function(){
+    var t=$('#fbRules');
+    function sel(){t.focus();t.select();$('#fbMsg').textContent='Rules selected. Copy them from your keyboard or menu.';}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value).then(function(){$('#fbMsg').textContent='Rules copied.';}).catch(sel);else sel();
+  };
+  $('#fbApply').onclick=function(){
+    var m=$('#fbMsg'),cfg=parseFbConfig($('#fbCfg').value);
+    if(!cfg){m.textContent='Could not read that. Paste the whole firebaseConfig block from Firebase.';m.style.color='var(--danger)';return;}
+    draft.site.firebase=cfg;saveDraft();m.style.color='var(--ok)';m.textContent='Applied for project '+cfg.projectId+'. Now press Publish.';
+  };
+  $('#fbOff').onclick=function(){delete draft.site.firebase;saveDraft();$('#fbCfg').value='';$('#fbMsg').style.color='';$('#fbMsg').textContent='Online saves turned off. Press Publish.';};
+}
+var FB_RULES="rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /users/{uid}/saves/{saveId} {\n      allow read, delete: if request.auth != null && request.auth.uid == uid;\n      allow create, update: if request.auth != null && request.auth.uid == uid\n        && request.resource.data.keys().hasOnly(['d','t','n'])\n        && request.resource.data.d is string\n        && request.resource.data.d.size() < 900000;\n    }\n  }\n}\n";
+function parseFbConfig(txt){
+  txt=String(txt||'');var a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return null;
+  var s=txt.slice(a,b+1).replace(/^\s*\/\/.*$/gm,'').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,'}');
+  var o;try{o=JSON.parse(s);}catch(e){return null;}
+  if(!o||!o.apiKey||!o.projectId||!o.appId)return null;
+  var out={};['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(function(k){if(o[k])out[k]=String(o[k]);});
+  return out;
 }
 function gMsg(t,ok){var m=$('#gMsg');m.textContent=t;m.className='err'+(ok?' ok':'');}
 function renderGit(){var c=gitCfg();$('#gOwner').value=c.owner;$('#gRepo').value=c.repo;$('#gBranch').value=c.branch;$('#gToken').value=c.token;}
-function renderSite(){$('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;}
+function renderSite(){
+  $('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;
+  $('#fbCfg').value=draft.site.firebase?JSON.stringify(draft.site.firebase,null,2):'';
+}
 function renderList(){
   var box=$('#glist');box.innerHTML='';
   if(!draft.games.length){box.appendChild(h('p',{'class':'hint',text:'No games yet. Tap Add game to create the first one.'}));}
