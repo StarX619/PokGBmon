@@ -4,26 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PokiGbaMon</title>
-<meta name="description" content="Play GBA games free in your browser. No install, no account.">
-<meta name="theme-color" content="#eceaf4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f0d1c" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Play GBA games free in your browser. Play instantly, save progress online.">
+<meta name="theme-color" content="#f3f1ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0a1a" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <style>
 :root{
   color-scheme:light dark;
-  --bg:#eceaf4; --surface:#fbfaff; --ink:#1c1a33; --muted:#5a5679; --line:#d4d0e6;
-  --accent:#4f46a5; --on-accent:#fff; --chip:#e1ddf0; --heart:#cf2f57; --danger:#b3243f; --ok:#1f7a4d;
+  --bg:#f3f1ff; --surface:#ffffff; --ink:#1a162e; --muted:#6b6380; --line:#d8d3e8;
+  --accent:#5b4fe5; --on-accent:#fff; --chip:#ebe7fb; --heart:#5b4fe5; --danger:#c0392b; --ok:#1e8a49;
   --font-display:"Pixelify Sans","Courier New",monospace;
   --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --radius:16px; --radius-sm:10px; --shadow:0 4px 24px rgba(91,79,229,.12); --shadow-lg:0 8px 32px rgba(91,79,229,.18);
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#0f0d1c;--surface:#1a1731;--ink:#ece9fb;--muted:#a9a3cb;--line:#2f2a50;--accent:#a99fff;--on-accent:#17133a;--chip:#27224a;--heart:#ff6b8d;--danger:#ff8fa3;--ok:#6fd39b}
+  :root{--bg:#0d0a1a;--surface:#161226;--ink:#f0edfb;--muted:#9a92b8;--line:#2a2442;--accent:#9b92ff;--on-accent:#0d0a1a;--chip:#1f1a36;--heart:#9b92ff;--danger:#e06c75;--ok:#6fd39b}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font-body);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(91,79,229,.15),transparent 60%),
+              radial-gradient(ellipse 60% 40% at 100% 100%,rgba(155,146,255,.1),transparent 50%);
+  @media (prefers-color-scheme:dark){
+    background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(155,146,255,.12),transparent 60%),
+               radial-gradient(ellipse 60% 40% at 100% 100%,rgba(91,79,229,.08),transparent 50%);
+  }
+}
 button,a.btn,.chip,.sp,.heart,.cover{touch-action:manipulation}
 button{font:inherit;color:inherit}
 input,textarea,select{font:16px var(--font-body);color:var(--ink)}
@@ -33,39 +42,55 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:bal
 .wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 
 /* header */
-.hdr{border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hdr{border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top);background:var(--surface);position:sticky;top:0;z-index:100}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;padding-block:12px;flex-wrap:wrap}
-.logo{font:700 24px/1 var(--font-display);text-decoration:none;color:inherit;min-height:40px;display:inline-flex;align-items:center}
+.logo{font:700 24px/1 var(--font-display);text-decoration:none;color:inherit;min-height:40px;display:inline-flex;align-items:center;gap:10px}
+  .logo-icon{flex:none;display:block}
+  .logo-text{display:none}
+  @media (min-width:420px){.logo-text{display:block}}
 .search{flex:1 1 220px;max-width:360px}
 .search input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px}
 .notice{background:var(--accent);color:var(--on-accent);padding:10px max(16px,env(safe-area-inset-left));text-align:center;font-size:14px;font-weight:600}
 
 /* home */
-.intro{padding-block:22px 4px}
-.intro h1{font-size:clamp(26px,7vw,42px)}
-.intro p{margin:8px 0 0;color:var(--muted);max-width:60ch}
+.hero{position:relative;overflow:hidden;border-radius:0 0 var(--radius) var(--radius);margin-bottom:24px}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(40px) brightness(.5);transform:scale(1.15);z-index:0}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,10,30,.6),rgba(13,10,30,.85));}
+.hero-content{position:relative;z-index:1;padding:clamp(32px,6vw,56px) max(16px,env(safe-area-inset-left)) clamp(24px,4vw,32px);text-align:center}
+.hero-content h1{font-size:clamp(28px,6vw,48px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px;text-shadow:0 2px 16px rgba(0,0,0,.4)}
+.hero-desc{font-size:clamp(15px,2.5vw,18px);color:rgba(255,255,255,.9);max-width:600px;margin:0 auto 20px;text-shadow:0 1px 8px rgba(0,0,0,.3)}
+.hero .btn.big{min-height:56px;font-size:18px;padding:0 32px;box-shadow:var(--shadow-lg)}
+
+.intro{padding-block:8px 4px;text-align:center}
+.intro h1{font-size:clamp(24px,5vw,36px);margin-bottom:6px}
+.intro p{margin:0;color:var(--muted);max-width:60ch;font-size:15px}
 .tools{display:flex;flex-direction:column;gap:10px;padding-block:16px 12px}
 .count{font-size:13px;color:var(--muted)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-inline:calc(-1*max(16px,env(safe-area-inset-left)));padding-inline:max(16px,env(safe-area-inset-left));scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;min-height:40px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+.chip{flex:none;min-height:40px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:20px 14px;padding-bottom:28px}
-.card{display:grid;gap:6px;align-content:start;min-width:0}
-.cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:10px;overflow:hidden;background:#000;cursor:pointer}
-.cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px 16px;padding-bottom:32px}
+.card{display:grid;gap:10px;align-content:start;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;transition:transform .18s ease,box-shadow .18s ease, border-color .18s ease}
+@media (hover:hover){.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}}
+.card:focus-within{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+.cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:var(--radius-sm);overflow:hidden;background:#000;cursor:pointer}
+.cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto;transition:transform .3s ease}
 .cover canvas{image-rendering:pixelated}
-.cover .go{position:absolute;inset:0;display:grid;place-items:center;background:rgba(12,9,36,.55);color:#fff;font:700 18px var(--font-display);opacity:0;transition:opacity .15s}
+@media (hover:hover){.card:hover .cover canvas,.card:hover .cover img{transform:scale(1.03)}}
+.cover .go{position:absolute;inset:0;display:grid;place-items:center;background:rgba(13,10,30,.6);color:#fff;font:700 16px var(--font-display);opacity:0;transition:opacity .2s}
 @media (hover:hover){.cover:hover .go{opacity:1}}
 .cover:focus-visible .go{opacity:1}
-.badge{position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:999px;background:var(--heart);color:#fff;font:700 11px var(--font-body);letter-spacing:.04em;text-transform:uppercase}
+.badge{position:absolute;top:10px;left:10px;z-index:2;padding:3px 10px;border-radius:999px;background:var(--accent);color:var(--on-accent);font:700 10px var(--font-body);letter-spacing:.04em;text-transform:uppercase;box-shadow:0 2px 8px rgba(91,79,229,.4)}
 .meta{display:flex;align-items:center;justify-content:space-between;gap:4px}
-.meta h3{font-size:17px;min-width:0;overflow-wrap:anywhere}
+.meta h3{font-size:16px;min-width:0;overflow-wrap:anywhere;font-family:var(--font-display)}
 .genre{font-size:12px;color:var(--muted)}
 .desc{font-size:13px;color:var(--muted);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.heart{flex:none;width:44px;height:44px;margin:-6px -8px -6px 0;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted)}
-.heart svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
-.heart[aria-pressed="true"]{color:var(--heart)}
+.heart{flex:none;width:40px;height:40px;margin:-4px -6px -4px 0;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted);transition:color .15s}
+.heart svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.heart[aria-pressed="true"]{color:var(--accent)}
 .heart[aria-pressed="true"] svg{fill:currentColor}
 .msg{padding:30px 0;color:var(--muted)}
 .how{border-top:1px solid var(--line);padding-block:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
@@ -96,11 +121,16 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .player{padding-block:14px 26px}
 .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .top h1{font-size:clamp(20px,5vw,30px);min-width:0;overflow-wrap:anywhere}
-.stage{position:relative;background:#000;border-radius:12px;overflow:hidden;width:100%;max-width:760px;height:min(74vh,640px);margin:0 auto;overscroll-behavior:contain;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.gba-frame{position:relative;width:100%;max-width:760px;margin:0 auto;border-radius:20px;background:linear-gradient(180deg,#2a2540 0%,#1a1628 100%);box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.05),inset 0 -1px 0 rgba(0,0,0,.3);overflow:hidden}
+.gba-frame::before{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:60px;height:6px;background:radial-gradient(circle,#5b4fe5 0%,transparent 70%);border-radius:3px;z-index:10;pointer-events:none}
+.gba-frame::after{content:"";position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:120px;height:2px;background:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(255,255,255,.08) 8px,rgba(255,255,255,.08) 16px);border-radius:1px;z-index:10;pointer-events:none}
+.stage{position:relative;background:#000;border-radius:12px;overflow:hidden;width:100%;height:min(74vh,640px);margin:8px;overscroll-behavior:contain;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 0 60px rgba(0,0,0,.5)}
 @supports (height:1dvh){.stage{height:min(74dvh,640px)}}
-@media (min-width:760px){.stage{height:auto;aspect-ratio:3/2}}
+@media (min-width:600px){.stage{margin:12px}}
+@media (min-width:760px){.stage{height:auto;aspect-ratio:3/2;margin:16px}}
 #game{width:100%;height:100%}
-.stage:fullscreen,.stage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;border-radius:0;aspect-ratio:auto}
+.stage:fullscreen,.stage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;border-radius:0;aspect-ratio:auto;margin:0}
+.stage:fullscreen .fsbar,.stage:-webkit-full-screen .fsbar{display:flex}
 .ctl{max-width:760px;margin:12px auto 0;display:flex;gap:10px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .speed{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .speed .lbl{font:700 12px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -108,16 +138,24 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .sp[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .ctlmsg{max-width:760px;margin:6px auto 0;font-size:13px;color:var(--muted);min-height:18px}
 .fsbar{position:absolute;top:calc(8px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));z-index:2147483000;display:none;gap:8px}
-.stage:fullscreen .fsbar,.stage:-webkit-full-screen .fsbar{display:flex}
 .fsbar button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(10,8,30,.6);color:#fff;font-weight:700;font-size:14px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .tips{max-width:760px;margin:14px auto 0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
 .tips b{color:var(--ink)}
+.keys-help{max-width:760px;margin:16px auto 0;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);font-size:13px;color:var(--muted);display:none}
+.keys-help summary{cursor:pointer;font-weight:700;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;list-style:none}
+.keys-help summary::-webkit-details-marker{display:none}
+.keys-help summary::before{content:"⌨";font-size:16px}
+.keys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 16px}
+.keys-grid kbd{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:32px;padding:0 8px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font:600 12px var(--font-body);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.keys-grid span{color:var(--muted);font-size:12px}
+@media (min-width:760px){.keys-help{display:block}}
 @media (orientation:landscape) and (max-height:520px){
   .player{padding-block:6px}
   .top{margin-bottom:6px}
   .stage{height:calc(100vh - 70px);max-width:none;aspect-ratio:auto}
   @supports (height:1dvh){.stage{height:calc(100dvh - 70px)}}
   .tips{display:none}
+  .keys-help{display:none}
 }
 
 /* creator */
@@ -189,6 +227,13 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .citem b{font:700 15px/1.2 var(--font-display);overflow-wrap:anywhere}
 .citem small{color:var(--muted);font-size:12px}
 
+/* how section */
+.how{border-top:1px solid var(--line);padding-block:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.how-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:border-color .18s,box-shadow .18s}
+@media (hover:hover){.how-item:hover{border-color:var(--accent);box-shadow:var(--shadow)}}
+.how-item h3{font-size:17px;margin-bottom:8px;color:var(--ink)}
+.how-item p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+
 /* info pages + footer links */
 .doc{max-width:720px;padding-block:18px 30px}
 .doc h1{font-size:clamp(26px,6vw,36px)}
@@ -198,15 +243,53 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 .doc .upd{color:var(--muted);font-size:13px;margin:6px 0 8px}
 .linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;min-height:40px}
 .flinks{display:flex;gap:2px 18px;flex-wrap:wrap}
-.flinks a,.flinks .linkbtn{color:var(--muted);min-height:40px;display:inline-flex;align-items:center;font-size:14px}
+.flinks a,.flinks .linkbtn{color:var(--muted);min-height:40px;display:inline-flex;align-items:center;font-size:14px;transition:color .15s}
+.flinks a:hover,.flinks .linkbtn:hover{color:var(--accent)}
+footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-area-inset-bottom));color:var(--muted);font-size:13px;background:var(--surface);margin-top:40px}
+.foot{display:flex;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;align-items:center}
+.foot a{color:var(--muted);min-height:40px;display:inline-flex;align-items:center;transition:color .15s}
+.foot a:hover{color:var(--accent)}
 .rules{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
+
+/* buttons refinement */
+.btn{transition:all .15s ease}
+.btn.primary:hover{box-shadow:0 4px 16px rgba(91,79,229,.35);transform:translateY(-1px)}
+.btn.primary:active{transform:translateY(0)}
 </style>
 </head>
 <body>
 
 <header class="hdr">
   <div class="wrap bar">
-    <a class="logo" id="logo" href="./">PokiGbaMon</a>
+    <a class="logo" id="logo" href="./" aria-label="PokiGbaMon Home">
+      <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true" width="28" height="28">
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--accent)"/>
+            <stop offset="100%" stop-color="var(--heart)"/>
+          </linearGradient>
+        </defs>
+        <!-- Cartridge body -->
+        <rect x="4" y="6" width="24" height="20" rx="2" fill="url(#logoGrad)"/>
+        <!-- Cartridge top notch -->
+        <rect x="12" y="3" width="8" height="4" rx="1" fill="var(--accent)"/>
+        <!-- Label area -->
+        <rect x="7" y="10" width="18" height="12" rx="1" fill="rgba(255,255,255,0.15)"/>
+        <!-- Pixel dots on label -->
+        <circle cx="11" cy="13" r="1.2" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="16" cy="13" r="1.2" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="21" cy="13" r="1.2" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="11" cy="18" r="1.2" fill="rgba(255,255,255,0.4)"/>
+        <circle cx="16" cy="18" r="1.2" fill="rgba(255,255,255,0.4)"/>
+        <circle cx="21" cy="18" r="1.2" fill="rgba(255,255,255,0.4)"/>
+        <!-- Contact pins at bottom -->
+        <rect x="8" y="23" width="2.5" height="3" fill="rgba(255,255,255,0.5)"/>
+        <rect x="12" y="23" width="2.5" height="3" fill="rgba(255,255,255,0.5)"/>
+        <rect x="16" y="23" width="2.5" height="3" fill="rgba(255,255,255,0.5)"/>
+        <rect x="20" y="23" width="2.5" height="3" fill="rgba(255,255,255,0.5)"/>
+      </svg>
+      <span class="logo-text">PokiGbaMon</span>
+    </a>
     <div class="search" id="searchBox">
       <label for="q" style="position:absolute;left:-9999px">Search games</label>
       <input id="q" type="search" placeholder="Search games" autocomplete="off" enterkeyhint="search">
@@ -274,9 +357,17 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
 <main>
   <!-- HOME -->
   <div id="home" hidden>
+    <section class="hero" aria-labelledby="heroTitle" hidden>
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="wrap hero-content">
+        <h1 id="heroTitle"></h1>
+        <p class="hero-desc" id="heroDesc"></p>
+        <a class="btn primary big" id="heroPlay" href="#">Play Now</a>
+      </div>
+    </section>
     <section class="wrap intro">
       <h1 id="tagline">Pick a game. Press play.</h1>
-      <p>Free GBA games that run right in your browser, on phone or computer. No install and no account.</p>
+      <p>Free GBA games that run in your browser. Play instantly, save progress online.</p>
     </section>
     <section class="wrap" id="contSec" aria-label="Continue playing" hidden>
       <h2 class="sech">Continue playing</h2>
@@ -291,9 +382,9 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <div class="msg" id="msg" hidden></div>
     </section>
     <section class="wrap how">
-      <div><h3>Saving your progress</h3><p>In-game saves stay in this browser. Use the same phone and browser, and do not clear site data.</p></div>
-      <div><h3>Move to another device</h3><p>Open the game menu and use Export Save File and Import Save File.</p></div>
-      <div><h3>Loading time</h3><p>Games are around 15 MB. The first load can take a moment on mobile data. Wi-Fi is faster.</p></div>
+      <div class="how-item"><h3>Saving your progress</h3><p>In-game saves stay in this browser. Use the same phone and browser, and do not clear site data.</p></div>
+      <div class="how-item"><h3>Move to another device</h3><p>Open the game menu and use Export Save File and Import Save File.</p></div>
+      <div class="how-item"><h3>Loading time</h3><p>Games are around 15 MB. The first load can take a moment on mobile data. Wi-Fi is faster.</p></div>
     </section>
   </div>
 
@@ -311,25 +402,27 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <a class="btn" href="./">&larr; All games</a>
       <h1 id="pTitle"></h1>
     </div>
-    <div class="stage">
-      <div id="game"></div>
-      <div class="gate" id="gate">
-        <div class="gatebg" id="gateBg"></div>
-        <div class="gatebox">
-          <div class="gatecover" id="gateCover"></div>
-          <div class="gatetitle" id="gateTitle"></div>
-          <div class="gatemeta" id="gateMeta">Checking...</div>
-          <button type="button" class="btn primary big" id="gateBtn">Tap to play</button>
-          <div class="prog" id="prog" hidden>
-            <div class="pbar" id="pbar"><i id="pfill"></i></div>
-            <span id="ptxt"></span>
+    <div class="gba-frame">
+      <div class="stage">
+        <div id="game"></div>
+        <div class="gate" id="gate">
+          <div class="gatebg" id="gateBg"></div>
+          <div class="gatebox">
+            <div class="gatecover" id="gateCover"></div>
+            <div class="gatetitle" id="gateTitle"></div>
+            <div class="gatemeta" id="gateMeta">Checking...</div>
+            <button type="button" class="btn primary big" id="gateBtn">Tap to play</button>
+            <div class="prog" id="prog" hidden>
+              <div class="pbar" id="pbar"><i id="pfill"></i></div>
+              <span id="ptxt"></span>
+            </div>
+            <p class="gatemsg" id="gateMsg" role="alert"></p>
           </div>
-          <p class="gatemsg" id="gateMsg" role="alert"></p>
         </div>
-      </div>
-      <div class="fsbar">
-        <button type="button" id="fsSpeed" aria-label="Change game speed">1x</button>
-        <button type="button" id="fsExit">Exit</button>
+        <div class="fsbar">
+          <button type="button" id="fsSpeed" aria-label="Change game speed">1x</button>
+          <button type="button" id="fsExit">Exit</button>
+        </div>
       </div>
     </div>
     <div class="ctl">
@@ -354,6 +447,18 @@ footer{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-
       <div id="tipSave"><b>Save:</b> use the in-game save. The game menu also has Save State and Load State.</div>
       <div><b>Backup:</b> menu, then Export Save File, to download your save and keep it safe.</div>
     </div>
+    <details class="keys-help">
+      <summary>Keyboard Controls (Desktop)</summary>
+      <div class="keys-grid">
+        <kbd>Z</kbd><span>A Button</span>
+        <kbd>X</kbd><span>B Button</span>
+        <kbd>Enter</kbd><span>Start</span>
+        <kbd>V</kbd><span>Select</span>
+        <kbd>Q</kbd><span>L Shoulder</span>
+        <kbd>E</kbd><span>R Shoulder</span>
+        <kbd>↑ ↓ ← →</kbd><span>D-Pad</span>
+      </div>
+    </details>
   </div>
 
   <!-- CREATOR -->
@@ -564,8 +669,20 @@ var cards=[];
 function visible(){return DATA.games.filter(function(g){return !g.hidden;});}
 function openHome(){
   $('#home').hidden=false;
-  buildChips();buildGrid();applyFilter();markCached();
+  buildHero();buildChips();buildGrid();applyFilter();markCached();
   $('#q').addEventListener('input',function(e){query=e.target.value;applyFilter();});
+}
+function buildHero(){
+  var first=visible()[0];
+  var hero=$('section.hero'),title=$('#heroTitle'),desc=$('#heroDesc'),play=$('#heroPlay'),bg=$('.hero-bg');
+  if(!first||!hero){if(hero)hero.hidden=true;return;}
+  hero.hidden=false;
+  title.textContent=first.title;
+  desc.textContent=first.description||'An amazing GBA adventure awaits.';
+  play.href='?play='+encodeURIComponent(first.id);
+  var url=safeUrl(first.cover);
+  if(url)bg.style.backgroundImage='url("'+url.replace(/"/g,'%22')+'")';
+  else bg.style.backgroundImage='';
 }
 function buildChips(){
   var gen=[];visible().forEach(function(g){if(gen.indexOf(g.genre)<0)gen.push(g.genre);});
@@ -1071,7 +1188,8 @@ function renderContinue(){
   var sec=$('#contSec'),row=$('#contRow');if(!sec||!row)return;
   row.innerHTML='';
   var items=filter==='all'&&!query.trim()?recent.map(function(r){return {r:r,g:visible().filter(function(x){return x.id===r.id;})[0]};}).filter(function(x){return x.g;}).slice(0,6):[];
-  sec.hidden=!items.length;
+  var vis=visible();
+  sec.hidden=!items.length||vis.length<=1;
   items.forEach(function(it){
     var a=h('a',{'class':'cover',href:'?play='+encodeURIComponent(it.g.id),'aria-label':'Resume '+it.g.title});
     a.appendChild(coverNode(it.g,true));a.appendChild(h('span',{'class':'go',text:'PLAY'}));

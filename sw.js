@@ -1,5 +1,5 @@
 /* PokiGbaMon service worker: keeps game files and the page itself on the phone. */
-var V = 'v1';
+var V = 'v2';
 var ROMS = 'pgm-roms-v1';          /* game files, kept until you remove them or the version changes */
 var SHELL = 'pgm-shell-' + V;      /* the page, games.json, icons */
 var CORE = 'pgm-core-' + V;        /* emulator files from the CDN */
