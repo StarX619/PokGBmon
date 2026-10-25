@@ -73,9 +73,10 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:bal
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px 16px;padding-bottom:32px}
-.card{display:grid;gap:10px;align-content:start;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;transition:transform .18s ease,box-shadow .18s ease, border-color .18s ease}
+.card{display:grid;gap:10px;align-content:start;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;transition:transform .18s ease,box-shadow .18s ease, border-color .18s ease;animation:fadeInUp .4s ease backwards}
 @media (hover:hover){.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}}
 .card:focus-within{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.card{animation:none}}
 .cover{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:0;border-radius:var(--radius-sm);overflow:hidden;background:#000;cursor:pointer}
 .cover canvas,.cover img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto;transition:transform .3s ease}
 .cover canvas{image-rendering:pixelated}
@@ -88,11 +89,64 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:bal
 .meta h3{font-size:16px;min-width:0;overflow-wrap:anywhere;font-family:var(--font-display)}
 .genre{font-size:12px;color:var(--muted)}
 .desc{font-size:13px;color:var(--muted);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.heart{flex:none;width:40px;height:40px;margin:-4px -6px -4px 0;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted);transition:color .15s}
+.heart{flex:none;width:40px;height:40px;margin:-4px -6px -4px 0;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;cursor:pointer;color:var(--muted);transition:color .15s,transform .1s}
 .heart svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .heart[aria-pressed="true"]{color:var(--accent)}
 .heart[aria-pressed="true"] svg{fill:currentColor}
+.heart:active{transform:scale(1.2)}
 .msg{padding:30px 0;color:var(--muted)}
+
+/* skeleton loaders */
+.skeleton-card{display:grid;gap:10px;align-content:start;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.skeleton-cover{width:100%;aspect-ratio:3/2;border-radius:var(--radius-sm);background:linear-gradient(90deg,var(--line) 25%,var(--chip) 50%,var(--line) 75%);background-size:200% 100%;animation:skeleton-pulse 1.5s infinite}
+.skeleton-title{height:20px;border-radius:8px;background:linear-gradient(90deg,var(--line) 25%,var(--chip) 50%,var(--line) 75%);background-size:200% 100%;animation:skeleton-pulse 1.5s infinite}
+.skeleton-genre{height:14px;width:60%;border-radius:8px;background:linear-gradient(90deg,var(--line) 25%,var(--chip) 50%,var(--line) 75%);background-size:200% 100%;animation:skeleton-pulse 1.5s infinite}
+.skeleton-desc{height:12px;width:100%;border-radius:8px;background:linear-gradient(90deg,var(--line) 25%,var(--chip) 50%,var(--line) 75%);background-size:200% 100%;animation:skeleton-pulse 1.5s infinite}
+@keyframes skeleton-pulse{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* empty state */
+.empty{display:grid;place-items:center;gap:16px;padding:48px 24px;text-align:center;color:var(--muted)}
+.empty svg{width:80px;height:80px;opacity:.5}
+.empty h2{margin:0;font-size:22px;color:var(--ink)}
+.empty p{margin:0;max-width:280px;font-size:15px}
+.empty .btn{margin-top:8px}
+
+/* game info modal/sheet */
+.modal{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-left));overflow-y:auto}
+.modal[hidden]{display:none}
+.gi-backdrop{position:absolute;inset:0;background:rgba(10,8,30,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:fadeIn .2s ease}
+.gi-sheet{position:relative;z-index:1;width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;animation:slideUp .3s ease}
+@media (min-width:641px){.gi-sheet{border-radius:var(--radius);max-height:90vh;overflow-y:auto}}
+@media (prefers-reduced-motion:reduce){.gi-backdrop,.gi-sheet{animation:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.gi-close{position:absolute;top:10px;right:10px;z-index:2;width:40px;height:40px;border:0;background:var(--chip);color:var(--ink);font-size:24px;line-height:1;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.gi-close:hover{background:var(--line)}
+.gi-cover{width:100%;aspect-ratio:3/2;background:#000;overflow:hidden}
+.gi-cover img,.gi-cover canvas{width:100%;height:100%;object-fit:cover;display:block}
+.gi-body{padding:16px;display:grid;gap:10px}
+.gi-body h2{margin:0;font-size:22px;overflow-wrap:anywhere}
+.gi-genre{font-size:13px;color:var(--muted);display:inline-block;padding:2px 10px;border-radius:999px;background:var(--chip)}
+.gi-desc{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.gi-how{font-size:13px;color:var(--muted);line-height:1.7}
+.gi-how b{color:var(--ink)}
+.gi-actions{display:flex;gap:10px;margin-top:6px}
+.gi-actions .btn{flex:1}
+
+/* bottom navigation */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1080px;display:flex;justify-content:space-around;align-items:center;background:var(--surface);border-top:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));z-index:200;box-shadow:0 -2px 16px rgba(0,0,0,.08)}
+@media (min-width:641px){.bnav{display:none}}
+.bnav-item{display:grid;place-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;min-height:44px;padding:0 8px;transition:color .15s,transform .1s}
+.bnav-item svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none}
+.bnav-item:hover,.bnav-item:focus-visible{color:var(--accent)}
+.bnav-item[aria-current="true"]{color:var(--accent)}
+.bnav-item:active{transform:scale(.95)}
+
+/* page transitions */
+.page-enter{animation:fadeIn .3s ease}
+.page-exit{animation:fadeOut .2s ease forwards}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
 .how{border-top:1px solid var(--line);padding-block:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .how h3{font-size:16px;margin-bottom:4px}
 .how p{margin:0;color:var(--muted);font-size:14px}
@@ -352,6 +406,33 @@ footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-
     </div>
   </div>
 </div>
+<!-- Game Info Modal/Sheet -->
+<div class="modal" id="gameInfo" hidden role="dialog" aria-modal="true" aria-labelledby="giTitle">
+  <div class="gi-backdrop" tabindex="-1"></div>
+  <div class="gi-sheet">
+    <button type="button" class="gi-close" aria-label="Close">&times;</button>
+    <div class="gi-cover" id="giCover"></div>
+    <div class="gi-body">
+      <h2 id="giTitle"></h2>
+      <span class="gi-genre" id="giGenre"></span>
+      <p class="gi-desc" id="giDesc" hidden></p>
+      <div class="gi-how" id="giHow" hidden></div>
+      <div class="gi-actions">
+        <button type="button" class="btn primary" id="giPlay">Play Now</button>
+        <button type="button" class="btn" id="giFav">Add to Favorites</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation (Mobile) -->
+<nav class="bnav" id="bnav" aria-label="Main navigation">
+  <a class="bnav-item" data-tab="home" href="#home" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor"/></svg><span>Home</span></a>
+  <a class="bnav-item" data-tab="fav" href="#fav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Favorites</span></a>
+  <a class="bnav-item" data-tab="search" href="#search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2"/></svg><span>Search</span></a>
+  <a class="bnav-item" data-tab="settings" href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Settings</span></a>
+</nav>
+
 <div class="notice" id="notice" hidden></div>
 
 <main>
@@ -378,7 +459,20 @@ footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-
         <div class="count" id="count">Loading games...</div>
         <div class="chips" id="chips"></div>
       </div>
-      <div class="grid" id="grid"></div>
+      <div class="grid" id="grid">
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-cover"></div><div class="skeleton-title"></div><div class="skeleton-genre"></div><div class="skeleton-desc"></div></article>
+      </div>
+      <div class="empty" id="emptyState" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor"/></svg>
+        <h2>No games yet</h2>
+        <p>Add games from the Creator Panel to get started.</p>
+        <a class="btn primary" href="?creator">Open Creator Panel</a>
+      </div>
       <div class="msg" id="msg" hidden></div>
     </section>
     <section class="wrap how">
@@ -486,7 +580,10 @@ footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-
         <div class="sec" id="listSec">
           <h2>Your games</h2>
           <p class="hint">Changes stay as a draft on this phone until you press Publish.</p>
-          <button type="button" class="btn primary" id="addGame">+ Add game</button>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="addGame">+ Add game</button>
+            <button type="button" class="btn" id="addFromRoms">Add from roms folder</button>
+          </div>
           <div class="glist" id="glist"></div>
         </div>
         <form class="sec" id="editor" hidden>
@@ -515,6 +612,26 @@ footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-
             <button type="button" class="btn danger" id="eDel" hidden>Delete</button>
           </div>
         </form>
+
+      <!-- Roms Folder Modal -->
+      <div class="modal" id="romsModal" hidden role="dialog" aria-modal="true" aria-labelledby="romsModalTitle">
+        <div class="gi-backdrop" tabindex="-1"></div>
+        <div class="gi-sheet" style="max-width:560px;">
+          <button type="button" class="gi-close" aria-label="Close">&times;</button>
+          <div class="gi-body">
+            <h2 id="romsModalTitle">Add from roms folder</h2>
+            <p class="hint" id="romsHint">Pick a .gba or .zip file from your GitHub repository's <code>roms/</code> folder.</p>
+            <div id="romsLoading" class="prog" hidden>
+              <div class="pbar"><i></i></div>
+              <span>Loading file list...</span>
+            </div>
+            <p class="err" id="romsErr" role="alert" hidden></p>
+            <div id="romsList" class="glist" style="max-height:300px;overflow:auto;"></div>
+            <div class="btnrow" style="margin-top:12px;justify-content:flex-end;">
+              <button type="button" class="btn" id="romsClose">Close</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="tSite" hidden>
@@ -667,6 +784,11 @@ function coverNode(g,lazy){
 /* ============ home ============ */
 var cards=[];
 function visible(){return DATA.games.filter(function(g){return !g.hidden;});}
+function isPlaceholderDesc(desc){
+  if(!desc)return true;
+  var d=String(desc).trim().toLowerCase();
+  return d==='ek line ka description'||d==='no description'||d==='placeholder'||d==='';
+}
 function openHome(){
   $('#home').hidden=false;
   buildHero();buildChips();buildGrid();applyFilter();markCached();
@@ -695,18 +817,29 @@ function buildChips(){
   });
 }
 function buildGrid(){
-  var grid=$('#grid');grid.innerHTML='';cards=[];
-  visible().forEach(function(g){
+  var grid=$('#grid');
+  // hide skeleton cards
+  grid.querySelectorAll('.skeleton-card').forEach(function(s){s.hidden=true;});
+  grid.innerHTML='';cards=[];
+  visible().forEach(function(g,i){
     var a=h('a',{'class':'cover',href:'?play='+encodeURIComponent(g.id),'aria-label':'Play '+g.title});
     a.appendChild(coverNode(g,true));
     if(g.badge)a.appendChild(h('span',{'class':'badge',text:g.badge}));
     a.appendChild(h('span',{'class':'go',text:'PLAY'}));
     var hb=h('button',{type:'button','class':'heart','aria-label':'Favorite '+g.title});hb.innerHTML=HEART;
-    hb.addEventListener('click',function(){
+    hb.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
       var nf=favs.slice(),k=nf.indexOf(g.id);if(k>=0)nf.splice(k,1);else nf.push(g.id);
       setFavs(nf);paint();applyFilter();
     });
-    var el=h('article',{'class':'card'},[a,h('div',{'class':'meta'},[h('h3',{text:g.title}),hb]),h('div',{'class':'genre',text:g.genre}),g.description?h('p',{'class':'desc',text:g.description}):null]);
+    // click on card (not cover link, not heart) opens game info
+    var el=h('article',{'class':'card'},[a,h('div',{'class':'meta'},[h('h3',{text:g.title}),hb]),h('div',{'class':'genre',text:g.genre}),!isPlaceholderDesc(g.description)?h('p',{'class':'desc',text:g.description}):null]);
+    // stagger animation delay
+    el.style.setProperty('--delay',(i*50)+'ms');
+    el.addEventListener('click',function(e){
+      if(e.target===a||a.contains(e.target)||e.target===hb||hb.contains(e.target))return;
+      openGameInfo(g);
+    });
     grid.appendChild(el);cards.push({g:g,el:el,heart:hb});
   });
   paint();
@@ -721,8 +854,94 @@ function applyFilter(){
     c.el.hidden=!ok;if(ok)n++;
   });
   $('#count').textContent=n+(n===1?' game':' games');
+  // show empty state if no results and not loading
+  var emptyEl=$('#emptyState');
+  if(emptyEl){
+    if(n===0&&cards.length>0){
+      emptyEl.hidden=false;
+      emptyEl.querySelector('h2').textContent=filter==='fav'?'No favorites yet':'No games match';
+      emptyEl.querySelector('p').textContent=filter==='fav'?'Tap the heart on a game to add it to favorites.':'Try another search or filter.';
+      emptyEl.querySelector('a').style.display='none';
+    }else if(n===0&&cards.length===0){
+      emptyEl.hidden=false;
+      emptyEl.querySelector('h2').textContent='No games yet';
+      emptyEl.querySelector('p').textContent='Add games from the Creator Panel to get started.';
+      emptyEl.querySelector('a').style.display='inline-flex';
+    }else{
+      emptyEl.hidden=true;
+    }
+  }
   renderContinue();
   showMsg(n?'':(filter==='fav'&&!q?'No favorites yet. Tap the heart on a game to add it here.':(cards.length?'No games match. Try another search or filter.':'No games added yet.')));
+}
+
+/* ============ game info modal ============ */
+var gameInfoModal=$('#gameInfo'),gameInfoClose=$('#gameInfo .gi-close'),gameInfoPlay=$('#giPlay'),gameInfoFav=$('#giFav');
+function openGameInfo(g){
+  if(!g)return;
+  var cover=$('#giCover'),title=$('#giTitle'),genre=$('#giGenre'),desc=$('#giDesc'),how=$('#giHow');
+  cover.innerHTML='';cover.appendChild(coverNode(g,false));
+  title.textContent=g.title;
+  genre.textContent=g.genre||'';
+  if(!isPlaceholderDesc(g.description)){
+    desc.textContent=g.description;desc.hidden=false;
+  }else{desc.hidden=true;}
+  if(g.howto){
+    how.innerHTML='<b>How to play:</b> '+g.howto;how.hidden=false;
+  }else{how.hidden=true;}
+  gameInfoPlay.onclick=function(){location.href='?play='+encodeURIComponent(g.id);};
+  gameInfoFav.onclick=function(){
+    var nf=favs.slice(),k=nf.indexOf(g.id);if(k>=0)nf.splice(k,1);else nf.push(g.id);
+    setFavs(nf);paint();applyFilter();gameInfoFav.textContent=k>=0?'Add to Favorites':'Remove from Favorites';
+  };
+  gameInfoFav.textContent=favs.indexOf(g.id)>=0?'Remove from Favorites':'Add to Favorites';
+  gameInfoModal.hidden=false;
+  document.body.style.overflow='hidden';
+  // focus trap
+  setTimeout(function(){gameInfoClose.focus();},50);
+}
+function closeGameInfo(){
+  gameInfoModal.hidden=true;
+  document.body.style.overflow='';
+}
+gameInfoClose.addEventListener('click',closeGameInfo);
+gameInfoModal.querySelector('.gi-backdrop').addEventListener('click',closeGameInfo);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!gameInfoModal.hidden)closeGameInfo();});
+
+/* ============ bottom navigation ============ */
+var bnav=$('#bnav');
+if(bnav){
+  var bnavItems=bnav.querySelectorAll('.bnav-item');
+  bnavItems.forEach(function(item){
+    item.addEventListener('click',function(e){
+      var tab=this.getAttribute('data-tab');
+      if(tab==='home'){
+        filter='all';applyFilter();window.scrollTo({top:0,behavior:'smooth'});
+      }else if(tab==='fav'){
+        filter='fav';applyFilter();window.scrollTo({top:0,behavior:'smooth'});
+      }else if(tab==='search'){
+        var q=$('#q');if(q){q.focus();q.select();}
+      }else if(tab==='settings'){
+        // open creator panel settings tab or show a simple settings drawer
+        location.href='?creator#settings';
+      }
+      // update active state
+      bnavItems.forEach(function(i){i.removeAttribute('aria-current');});
+      this.setAttribute('aria-current','true');
+      e.preventDefault();
+    });
+  });
+  // update active state on filter change
+  var origApplyFilter=applyFilter;
+  applyFilter=function(){
+    origApplyFilter();
+    var activeTab='home';
+    if(filter==='fav')activeTab='fav';
+    bnavItems.forEach(function(i){
+      if(i.getAttribute('data-tab')===activeTab)i.setAttribute('aria-current','true');
+      else i.removeAttribute('aria-current');
+    });
+  };
 }
 
 /* ============ player ============ */
@@ -1382,6 +1601,9 @@ function wirePanel(){
     $('#ctabs').querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
   });
   $('#addGame').onclick=function(){openEditor(-1);};
+  $('#addFromRoms').onclick=showRomsFolderModal;
+  $('#romsClose').onclick=closeRomsModal;
+  $('#romsModal').querySelector('.gi-backdrop').addEventListener('click',closeRomsModal);
   $('#editor').onsubmit=function(e){e.preventDefault();saveEditor();};
   $('#eCancel').onclick=closeEditor;
   $('#eTitle').addEventListener('input',function(){if(editIdx===-1&&!$('#eId').dataset.touched)$('#eId').value=slug($('#eTitle').value);});
@@ -1479,6 +1701,77 @@ function renderList(){
   var gl=$('#genres');gl.innerHTML='';var seen={};
   draft.games.forEach(function(g){if(!seen[g.genre]){seen[g.genre]=1;gl.appendChild(h('option',{value:g.genre}));}});
 }
+
+/* ============ roms folder ============ */
+function listRomsFolder(){
+  var c=gitNeed();
+  if(!c)return Promise.reject({status:0,msg:'Add your GitHub token in the GitHub tab first.'});
+  return gitGet(c,'roms/').then(function(res){
+    if(!res){throw {status:404,msg:'roms/ folder not found in the repository.'};}
+    if(!Array.isArray(res)){throw {status:500,msg:'Unexpected response from GitHub.'};}
+    // filter .gba and .zip files
+    var files=res.filter(function(f){
+      return f.type==='file'&&/\.(gba|zip)$/i.test(f.name);
+    }).map(function(f){
+      return {name:f.name,path:'roms/'+f.name,size:f.size||0};
+    });
+    if(!files.length){throw {status:204,msg:'No .gba or .zip files in roms/ folder.'};}
+    // exclude files already in games.json
+    var used=new Set((draft.games||[]).map(function(g){return g.file;}));
+    files=files.filter(function(f){return !used.has(f.path);});
+    if(!files.length){throw {status:204,msg:'All ROM files are already added to the game list.'};}
+    return files;
+  }).catch(function(e){
+    if(e&&e.status!==undefined)throw e;
+    var status=e&&e.status;var msg=e&&e.msg;
+    if(status===401||status===403)throw {status:status,msg:gitErr(status)};
+    if(status===404)throw {status:404,msg:'roms/ folder not found in the repository.'};
+    throw {status:0,msg:'Could not reach GitHub. Check your internet.'};
+  });
+}
+function showRomsFolderModal(){
+  var modal=$('#romsModal'),list=$('#romsList'),loading=$('#romsLoading'),err=$('#romsErr');
+  modal.hidden=false;
+  list.innerHTML='';loading.hidden=false;err.hidden=true;err.textContent='';
+  document.body.style.overflow='hidden';
+  $('#romsClose').focus();
+  modal._escHandler=function(e){if(e.key==='Escape')closeRomsModal();};
+  document.addEventListener('keydown',modal._escHandler);
+  listRomsFolder().then(function(files){
+    loading.hidden=true;
+    files.forEach(function(f){
+      var row=h('div',{'class':'grow',style:'align-items:center;'},[
+        h('div',{},[h('b',{text:f.name}),h('span',{text:fmtMB(f.size)})]),
+        h('div',{'class':'act'},[h('button',{type:'button','class':'btn primary sm',text:'Use this file',onclick:function(){pickRomFile(f);}})])
+      ]);
+      list.appendChild(row);
+    });
+  }).catch(function(e){
+    loading.hidden=true;
+    err.textContent=e.msg||'Could not load roms folder.';
+    err.hidden=false;
+  });
+}
+function pickRomFile(f){
+  var modal=$('#romsModal');
+  modal.hidden=true;
+  document.body.style.overflow='';
+  // derive id from filename (without extension, slugged)
+  var base=f.name.replace(/\.(gba|zip)$/i,'');
+  var id=slug(base);
+  openEditor(-1);
+  $('#eFile').value=f.path;
+  $('#eId').value=id;
+  $('#eId').dataset.touched='1';
+  // leave title, genre, description, cover empty for user to fill
+}
+function closeRomsModal(){
+  var modal=$('#romsModal');
+  modal.hidden=true;
+  document.body.style.overflow='';
+  if(modal._escHandler){document.removeEventListener('keydown',modal._escHandler);modal._escHandler=null;}
+}
+
 function previewCover(){
   var p=$('#cvPrev'),u=$('#eCover').value.trim(),m=$('#cvMsg');
   p.innerHTML='';
