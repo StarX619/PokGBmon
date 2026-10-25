@@ -974,7 +974,7 @@ function setProg(got,total,label){
   $('#ptxt').textContent=label||(total?(fmtMB(got)+' of '+fmtMB(total)+' ('+Math.min(100,Math.round(got/total*100))+'%)'):(got?fmtMB(got)+' downloaded':'Starting...'));
 }
 function fetchRom(url,onProg){
-  return fetch(url,{cache:'reload'}).then(function(r){
+  return fetch(url+'?dl='+Date.now(),{cache:'no-store'}).then(function(r){
     if(!r.ok)throw new Error('http '+r.status);
     var total=+r.headers.get('Content-Length')||0,type=r.headers.get('Content-Type')||'';
     if(!r.body||!r.body.getReader)return r.blob().then(function(b){onProg(b.size,b.size);return {blob:b,type:type};});
