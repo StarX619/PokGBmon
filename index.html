@@ -612,6 +612,7 @@ footer{border-top:1px solid var(--line);padding-block:24px calc(24px + env(safe-
             <button type="button" class="btn danger" id="eDel" hidden>Delete</button>
           </div>
         </form>
+      </div>
 
       <!-- Roms Folder Modal -->
       <div class="modal" id="romsModal" hidden role="dialog" aria-modal="true" aria-labelledby="romsModalTitle">
@@ -1578,7 +1579,7 @@ function updatePub(){
 function showPanel(){
   $('#loginBox').hidden=true;$('#panel').hidden=false;
   $('#logout').onclick=logout;
-  loadAdminData().then(function(){wirePanel();renderList();renderSite();renderGit();updatePub();});
+  loadAdminData().then(function(){wirePanel();renderList();renderSite();renderGit();renderCloud();updatePub();});
 }
 function loadAdminData(){
   var c=gitNeed();
@@ -1631,7 +1632,6 @@ function wirePanel(){
     }).catch(function(e){gMsg(gitErr(e&&e.status));});
   };
   $('#pubBtn').onclick=publish;
-  $('#fbRules').value=FB_RULES;
   $('#fbCopy').onclick=function(){
     var t=$('#fbRules');
     function sel(){t.focus();t.select();$('#fbMsg').textContent='Rules selected. Copy them from your keyboard or menu.';}
@@ -1683,6 +1683,10 @@ function renderGit(){var c=gitCfg();$('#gOwner').value=c.owner;$('#gRepo').value
 function renderSite(){
   $('#sTitle').value=draft.site.title;$('#sTag').value=draft.site.tagline;$('#sNotice').value=draft.site.notice;$('#sContact').value=draft.site.contact||'';
   $('#fbCfg').value=draft.site.firebase?JSON.stringify(draft.site.firebase,null,2):'';
+}
+function renderCloud(){
+  $('#fbCfg').value=draft.site.firebase?JSON.stringify(draft.site.firebase,null,2):'';
+  $('#fbRules').value=FB_RULES;
 }
 function renderList(){
   var box=$('#glist');box.innerHTML='';
